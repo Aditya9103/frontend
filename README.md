@@ -5,13 +5,13 @@
 1. Clone the project
 
 ```
-    git clone https://github.com/singhsanket143/lms-frontend-hn.git
+    https://github.com/Aditya9103/frontend.git
 ```
 
 2. Move into the directory
 
 ```
-    cd lms-frontend-hn
+    cd frontend
 ```
 
 3. install dependencies
