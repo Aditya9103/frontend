@@ -2,9 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+html,
+#root {
+  min-height: 100%;
+  background-color: #26323d;
+}
+
 body {
-  background-color:#26323d;
-  margin: auto;
-  max-width: 1440px;
+  min-height: 100vh;
+  margin: 0;
+  background-color: #26323d;
   position: relative;
 }

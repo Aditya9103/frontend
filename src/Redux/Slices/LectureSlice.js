@@ -4,11 +4,13 @@ import toast from "react-hot-toast";
 import axiosInstance from "../../Helpers/axiosInstance";
 
 const initialState = {
-    lectures: []
+    lectures: [],
+    isLoading: false,
+    error: "",
 }
 
 
-export const getCourseLectures = createAsyncThunk("/course/lecture/get", async (cid) => {
+export const getCourseLectures = createAsyncThunk("/course/lecture/get", async (cid, { rejectWithValue }) => {
     try {
         const response = axiosInstance.get(`/courses/${cid}`);
         toast.promise(response, {
@@ -18,11 +20,13 @@ export const getCourseLectures = createAsyncThunk("/course/lecture/get", async (
         });
         return (await response).data;
     } catch(error) {
-        toast.error(error?.response?.data?.message);
+        const message = error?.response?.data?.message || "Failed to load the lectures";
+        toast.error(message);
+        return rejectWithValue(message);
     }
 });
 
-export const addCourseLecture = createAsyncThunk("/course/lecture/add", async (data) => {
+export const addCourseLecture = createAsyncThunk("/course/lecture/add", async (data, { rejectWithValue }) => {
     try {
         const formData = new FormData();
         formData.append("lecture", data.lecture);
@@ -37,11 +41,13 @@ export const addCourseLecture = createAsyncThunk("/course/lecture/add", async (d
         });
         return (await response).data;
     } catch(error) {
-        toast.error(error?.response?.data?.message);
+        const message = error?.response?.data?.message || "Failed to add the lectures";
+        toast.error(message);
+        return rejectWithValue(message);
     }
 });
 
-export const deleteCourseLecture = createAsyncThunk("/course/lecture/delete", async (data) => {
+export const deleteCourseLecture = createAsyncThunk("/course/lecture/delete", async (data, { rejectWithValue }) => {
     try {
 
         const response = axiosInstance.delete(`/courses?courseId=${data.courseId}&lectureId=${data.lectureId}`);
@@ -52,7 +58,9 @@ export const deleteCourseLecture = createAsyncThunk("/course/lecture/delete", as
         });
         return (await response).data;
     } catch(error) {
-        toast.error(error?.response?.data?.message);
+        const message = error?.response?.data?.message || "Failed to delete the lectures";
+        toast.error(message);
+        return rejectWithValue(message);
     }
 });
 
@@ -62,13 +70,21 @@ const lectureSlice = createSlice({
     initialState,
     reducers: {},
     extraReducers: (builder) => {
-        builder.addCase(getCourseLectures.fulfilled, (state, action) => {
-            console.log(action);
-            state.lectures = action?.payload?.lectures;
+        builder.addCase(getCourseLectures.pending, (state) => {
+            state.isLoading = true;
+            state.error = "";
+        })
+        .addCase(getCourseLectures.fulfilled, (state, action) => {
+            state.isLoading = false;
+            state.lectures = action?.payload?.lectures || [];
+        })
+        .addCase(getCourseLectures.rejected, (state, action) => {
+            state.isLoading = false;
+            state.error = action.payload || "Failed to load lectures";
+            state.lectures = [];
         })
         .addCase(addCourseLecture.fulfilled, (state, action) => {
-            console.log(action);
-            state.lectures = action?.payload?.course?.lectures;
+            state.lectures = action?.payload?.course?.lectures || [];
         })
     }
 });
