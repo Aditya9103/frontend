@@ -1,16 +1,131 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-html,
-#root {
-  min-height: 100%;
-  background-color: #26323d;
+:root {
+  /* Light Mode (Premium Minimalist) */
+  --bg-main: #fcfcfd;
+  --bg-card: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --primary: #10b981; 
+  --primary-glow: rgba(16, 185, 129, 0.1);
+  --border: rgba(0, 0, 0, 0.08);
+  --accent: #f1f5f9;
 }
 
-body {
+.dark {
+  /* Dark Mode (Elite Deep Slate) */
+  --bg-main: #020617;
+  --bg-card: #0f172a;
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
+  --primary: #10b981;
+  --primary-glow: rgba(16, 185, 129, 0.3);
+  --border: rgba(255, 255, 255, 0.05);
+  --accent: #1e293b;
+}
+
+html,
+body,
+#root {
   min-height: 100vh;
-  margin: 0;
-  background-color: #26323d;
-  position: relative;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  scroll-behavior: smooth;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Outfit', sans-serif;
+}
+
+/* Night Shift (Blue Light Filter) */
+.night-shift {
+  filter: sepia(0.35) saturate(1.1) brightness(0.92);
+}
+
+/* Glassmorphism */
+.glass-nav {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+
+.dark .glass-nav {
+  background: rgba(15, 23, 42, 0.8);
+}
+
+.glass-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+}
+
+.dark .glass-card {
+  box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* Animations */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Custom Utilities */
+.text-gradient {
+  @apply text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-teal-600 to-sky-600;
+}
+
+.btn-modern {
+  @apply px-6 py-3 rounded-2xl font-bold transition-all duration-300 active:scale-95 flex items-center justify-center gap-2;
+}
+
+.btn-primary-modern {
+  @apply bg-emerald-500 text-white hover:bg-emerald-600 shadow-xl shadow-emerald-500/20 hover:shadow-emerald-500/40;
+}
+
+.btn-outline-modern {
+  @apply border-2 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10;
+}
+
+/* Swiper Customization */
+.swiper-pagination-bullet {
+  background: #cbd5e1 !important;
+  opacity: 1 !important;
+}
+
+.dark .swiper-pagination-bullet {
+  background: #334155 !important;
+}
+
+.swiper-pagination-bullet-active {
+  background: var(--primary) !important;
+  width: 24px !important;
+  border-radius: 4px !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-main);
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
 }
