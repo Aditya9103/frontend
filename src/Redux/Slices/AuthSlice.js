@@ -138,6 +138,19 @@ export const changePassword = createAsyncThunk(
   }
 );
 
+// ================= UPDATE PROGRESS =================
+export const updateCourseProgress = createAsyncThunk(
+  "/user/progress",
+  async ({ courseId, lectureId }) => {
+    try {
+      const res = await axiosInstance.post(`/user/progress/${courseId}/${lectureId}`);
+      return res.data;
+    } catch (error) {
+      toast.error(error?.response?.data?.message);
+    }
+  }
+);
+
 // ================= SLICE =================
 
 const authSlice = createSlice({
@@ -184,6 +197,14 @@ const authSlice = createSlice({
         state.isLoggedIn = true;
         state.data = user;
         state.role = user?.role || "";
+      })
+      
+      // UPDATE PROGRESS
+      .addCase(updateCourseProgress.fulfilled, (state, action) => {
+        if (!action?.payload?.success) return;
+        
+        state.data.progress = action.payload.progress;
+        localStorage.setItem("data", JSON.stringify(state.data));
       });
   },
 });

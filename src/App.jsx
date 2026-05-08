@@ -22,6 +22,12 @@ import Signup from './Pages/Signup';
 import ChangePassword from './Pages/Password/ChangePassword';
 import EditProfile from './Pages/User/EditProfile';
 import Profile from './Pages/User/Profile';
+import Mentors from './Pages/Mentors';
+import SuccessStories from './Pages/SuccessStories';
+import Blog from './Pages/Blog';
+import BlogDetails from './Pages/BlogDetails';
+import CreateBlog from './Pages/CreateBlog';
+
 function App() {
 
   return (
@@ -31,6 +37,10 @@ function App() {
         <Route path="/about" element={<AboutUs />} ></Route>
         <Route path="/courses" element={<CourseList />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/mentors" element={<Mentors />} />
+        <Route path="/success-stories" element={<SuccessStories />} />
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/blog/:id" element={<BlogDetails />} />
         <Route path="/denied" element={<Denied />} />
 
         <Route path="/course/description" element={<CourseDescription />} />
@@ -42,6 +52,7 @@ function App() {
           <Route path="/course/create" element={<CreateCourse />} />
           <Route path="/course/addlecture" element={<AddLecture />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/blog/create" element={<CreateBlog />} />
         </Route>
 
         <Route element={<RequireAuth allowedRoles={["ADMIN", "USER"]} />}>

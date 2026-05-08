@@ -1,4 +1,4 @@
-import { LogOut, Menu, User, X, BookOpen, LayoutDashboard, Phone, Info, Home, Moon, Sun, Eye, EyeOff } from 'lucide-react';
+import { LogOut, Menu, User, X, BookOpen, LayoutDashboard, Phone, Info, Home, Moon, Sun, Eye, EyeOff, Flame, Users, TrendingUp, Newspaper } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -18,8 +18,8 @@ function HomeLayout({ children }) {
     const [isDarkMode, setIsDarkMode] = useState(true);
     const [isNightShift, setIsNightShift] = useState(false);
 
-    const isLoggedIn = useSelector((state) => state?.auth?.isLoggedIn);
-    const role = useSelector((state) => state?.auth?.role);
+    const { isLoggedIn, role, data: userData } = useSelector((state) => state?.auth);
+    const streakCount = userData?.streak?.count || 0;
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -69,6 +69,9 @@ function HomeLayout({ children }) {
     const navLinks = [
         { name: 'Home', path: '/', icon: <Home size={18} /> },
         { name: 'Courses', path: '/courses', icon: <BookOpen size={18} /> },
+        { name: 'Mentors', path: '/mentors', icon: <Users size={18} /> },
+        { name: 'Stories', path: '/success-stories', icon: <TrendingUp size={18} /> },
+        { name: 'Blog', path: '/blog', icon: <Newspaper size={18} /> },
         { name: 'About', path: '/about', icon: <Info size={18} /> },
         { name: 'Contact', path: '/contact', icon: <Phone size={18} /> },
     ];
@@ -140,7 +143,18 @@ function HomeLayout({ children }) {
                                 </Link>
                             </>
                         ) : (
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-4">
+                                {/* Streak Counter */}
+                                {streakCount > 0 && (
+                                    <div 
+                                        title={`${streakCount} Day Learning Streak!`}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-500/10 border border-orange-500/20 rounded-xl cursor-help animate-pulse-slow"
+                                    >
+                                        <Flame size={18} className="text-orange-500 fill-orange-500" />
+                                        <span className="text-sm font-black text-orange-500">{streakCount}</span>
+                                    </div>
+                                )}
+                                
                                 <Link to="/user/profile" className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-emerald-500 hover:border-emerald-500 transition-all">
                                     <User size={20} />
                                 </Link>

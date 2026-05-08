@@ -7,12 +7,15 @@ import { BrowserRouter } from 'react-router-dom';
 
 import App from './App.jsx';
 import store from './Redux/store';
+import ErrorBoundary from './Components/ErrorBoundary';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
     <Provider store={store}>
-        <BrowserRouter>
-            <App />
-            <Toaster />
-        </BrowserRouter>
+        <ErrorBoundary>
+            <BrowserRouter>
+                <App />
+                <Toaster />
+            </BrowserRouter>
+        </ErrorBoundary>
     </Provider>
 );

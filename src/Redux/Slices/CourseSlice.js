@@ -4,21 +4,17 @@ import { toast } from "react-hot-toast";
 import axiosInstance from "../../Helpers/axiosInstance";
 
 const initialState = {
-    courseData: []
+    courseData: [],
+    isLoading: false
 }
 
 export const getAllCourses = createAsyncThunk("/course/get", async () => {
     try {
         const response = axiosInstance.get("/courses");
-        toast.promise(response, {
-            loading: "loading course data...",
-            success: "Courses loaded successfully",
-            error: "Failed to get the courses",
-        });
-
+        // We can keep the toast, but it's better to use skeletons for the main list
         return (await response).data.courses;
     } catch(error) {
-        toast.error(error?.response?.data?.message);
+        toast.error(error?.response?.data?.message || "Failed to load courses");
     }
 }); 
 
@@ -65,11 +61,19 @@ const courseSlice = createSlice({
     initialState,
     reducers: {},
     extraReducers: (builder) => {
-        builder.addCase(getAllCourses.fulfilled, (state, action) => {
-            if(action.payload) {
-                state.courseData = [...action.payload];
-            }
-        })
+        builder
+            .addCase(getAllCourses.pending, (state) => {
+                state.isLoading = true;
+            })
+            .addCase(getAllCourses.fulfilled, (state, action) => {
+                if(action.payload) {
+                    state.courseData = [...action.payload];
+                }
+                state.isLoading = false;
+            })
+            .addCase(getAllCourses.rejected, (state) => {
+                state.isLoading = false;
+            });
     }
 });
 
