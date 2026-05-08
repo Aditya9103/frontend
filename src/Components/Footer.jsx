@@ -1,4 +1,5 @@
-import { Facebook, Instagram, Linkedin, Twitter, BookOpen, Mail, MapPin, Phone, Github } from 'lucide-react';
+import { BsFacebook, BsInstagram, BsLinkedin, BsTwitter, BsGithub } from 'react-icons/bs';
+import { BookOpen, Mail, MapPin, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 function Footer() {
@@ -97,7 +98,7 @@ function Footer() {
                                 </ul>
                             </div>
                             <div className="flex flex-wrap gap-3 pt-2">
-                                {[<Facebook size={16} />, <Twitter size={16} />, <Instagram size={16} />, <Github size={16} />].map((icon, i) => (
+                                {[<BsFacebook size={16} />, <BsTwitter size={16} />, <BsInstagram size={16} />, <BsGithub size={16} />].map((icon, i) => (
                                     <a key={i} href="#" className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-emerald-500 hover:text-white transition-all shadow-sm">
                                         {icon}
                                     </a>
