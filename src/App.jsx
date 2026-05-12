@@ -10,6 +10,7 @@ import CourseList from './Pages/Course/CourseList';
 import CreateCourse from './Pages/Course/CreateCourse';
 import AddLecture from './Pages/Dashboard/Addlecture';
 import AdminDashboard from './Pages/Dashboard/AdminDashboard';
+import LearnerDashboard from './Pages/Dashboard/LearnerDashboard';
 import Displaylectures from './Pages/Dashboard/Displaylectures';
 import Denied from './Pages/Denied';
 import HomePage from './Pages/HomePage';
@@ -56,6 +57,7 @@ function App() {
         </Route>
 
         <Route element={<RequireAuth allowedRoles={["ADMIN", "USER"]} />}>
+          <Route path='/dashboard' element={<LearnerDashboard />} />
           <Route path='/user/profile' element={<Profile />} />
           <Route path='/user/editprofile' element={<EditProfile />} />
           <Route path='/changepassword' element={<ChangePassword />} />

@@ -1,6 +1,7 @@
+import { motion } from "framer-motion";
 import React, { useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { AiOutlineArrowLeft } from 'react-icons/ai';
+import { ArrowLeft, Key, Lock, ShieldCheck } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -37,8 +38,10 @@ function ChangePassword() {
             return;
         }
 
+        toast.loading("Updating password...");
         const res = await dispatch(changePassword(userPassword));
         if (res?.payload?.success) {
+            toast.success("Password updated successfully!");
             navigate('/user/profile');
         }
 
@@ -50,58 +53,86 @@ function ChangePassword() {
 
     return (
         <HomeLayout>
-            <div className="flex items-center justify-center h-[100vh]">
-                <form
-                    onSubmit={onFormSubmit}
-                    className="flex flex-col justify-center gap-3 rounded-lg p-4 text-white w-80 h-[26rem] shadow-[0_0_10px_black]"
+            <div className="min-h-screen py-32 px-6 flex items-center justify-center bg-slate-50 dark:bg-slate-950 transition-colors duration-500">
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="w-full max-w-md"
                 >
-                    <h1 className="text-center text-2xl font-bold">Change Password</h1>
-
-                    <div className="flex flex-col gap-1">
-                        <label className="text-lg font-semibold" htmlFor="oldPassword">
-                            Old Password
-                        </label>
-                        <input
-                            required
-                            type="password"
-                            name="oldPassword"
-                            id="oldPassword"
-                            placeholder="Enter your old password"
-                            className="bg-transparent px-2 py-1 border"
-                            value={userPassword.oldPassword}
-                            onChange={handleUserInput}
-                        />
-                    </div>
-
-                    <div className="flex flex-col gap-1">
-                        <label className="text-lg font-semibold" htmlFor="newPassword">
-                            New Password
-                        </label>
-                        <input
-                            required
-                            type="password"
-                            name="newPassword"
-                            id="newPassword"
-                            placeholder="Enter your new password"
-                            className="bg-transparent px-2 py-1 border"
-                            value={userPassword.newPassword}
-                            onChange={handleUserInput}
-                        />
-                    </div>
-
-                    <button
-                        type="submit"
-                        className="w-full bg-yellow-600 hover:bg-yellow-500 transition-all ease-in-out duration-300 rounded-sm py-2 font-semibold text-lg cursor-pointer"
+                    <form
+                        onSubmit={onFormSubmit}
+                        className="glass-card bg-white dark:bg-slate-900/50 p-10 rounded-[3rem] shadow-2xl shadow-emerald-500/5 border border-white dark:border-slate-800 space-y-8"
                     >
-                        Change Password
-                    </button>
+                        <div className="flex items-center gap-4 mb-2">
+                            <button 
+                                type="button"
+                                onClick={() => navigate(-1)} 
+                                className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-emerald-500 transition-colors"
+                            >
+                                <ArrowLeft size={20} />
+                            </button>
+                            <h1 className="text-2xl font-black font-outfit text-slate-900 dark:text-white">Security</h1>
+                        </div>
 
-                    <Link to="/user/profile">
-                        <p className="link text-accent cursor-pointer flex items-center justify-center w-full gap-2">
-                            <AiOutlineArrowLeft /> Go back to profile
-                        </p>
-                    </Link>
-                </form>
+                        <div className="flex flex-col items-center gap-4 py-4">
+                            <div className="w-20 h-20 bg-emerald-500/10 text-emerald-500 rounded-3xl flex items-center justify-center">
+                                <ShieldCheck size={40} />
+                            </div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Update Your Password</p>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1" htmlFor="oldPassword">
+                                    Current Password
+                                </label>
+                                <div className="relative group">
+                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
+                                    <input
+                                        required
+                                        type="password"
+                                        name="oldPassword"
+                                        id="oldPassword"
+                                        placeholder="Enter your current password"
+                                        className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-sm font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                                        value={userPassword.oldPassword}
+                                        onChange={handleUserInput}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1" htmlFor="newPassword">
+                                    New Secure Password
+                                </label>
+                                <div className="relative group">
+                                    <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
+                                    <input
+                                        required
+                                        type="password"
+                                        name="newPassword"
+                                        id="newPassword"
+                                        placeholder="Create a new password"
+                                        className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-sm font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                                        value={userPassword.newPassword}
+                                        onChange={handleUserInput}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <button
+                            type="submit"
+                            className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-emerald-500/20 hover:shadow-emerald-500/40 flex items-center justify-center gap-2"
+                        >
+                            <ShieldCheck size={18} /> Update Password
+                        </button>
+
+                        <Link to="/user/profile" className="block text-center text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-emerald-500 transition-colors">
+                            Return to Safety
+                        </Link>
+                    </form>
+                </motion.div>
             </div>
         </HomeLayout>
     );

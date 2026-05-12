@@ -76,8 +76,12 @@ function HomeLayout({ children }) {
         { name: 'Contact', path: '/contact', icon: <Phone size={18} /> },
     ];
 
-    if (isLoggedIn && role === 'ADMIN') {
-        navLinks.splice(2, 0, { name: 'Dashboard', path: '/admin/dashboard', icon: <LayoutDashboard size={18} /> });
+    if (isLoggedIn) {
+        if (role === 'ADMIN') {
+            navLinks.splice(2, 0, { name: 'Dashboard', path: '/admin/dashboard', icon: <LayoutDashboard size={18} /> });
+        } else {
+            navLinks.splice(2, 0, { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} /> });
+        }
     }
 
     return (

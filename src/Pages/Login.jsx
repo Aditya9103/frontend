@@ -34,7 +34,7 @@ function Signup() {
         // dispatch create account action
         const response = await dispatch(login(loginData));
         if(response?.payload?.success)
-            navigate("/");
+            navigate("/dashboard");
 
         setLoginData({
             email: "",

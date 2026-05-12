@@ -1,7 +1,7 @@
+import { motion } from "framer-motion";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { AiOutlineArrowLeft } from "react-icons/ai";
-import { BsPersonCircle } from 'react-icons/bs';
+import { ArrowLeft, Camera, User, Save } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -11,11 +11,13 @@ import { getUserData, updateProfile } from "../../Redux/Slices/AuthSlice";
 function EditProfile() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const userData = useSelector((state) => state?.auth?.data);
+    
     const [data, setData] = useState({
-        previewImage: "",
-        fullName: "",
+        previewImage: userData?.avatar?.secure_url || "",
+        fullName: userData?.fullName || "",
         avatar: undefined,
-        userId: useSelector((state) => state?.auth?.data?._id)
+        userId: userData?._id
     });
 
     function handleImageUpload(e) {
@@ -44,78 +46,111 @@ function EditProfile() {
 
     async function onFormSubmit(e) {
         e.preventDefault();
-        console.log(data);
-        if(!data.fullName || !data.avatar) {
-            toast.error("All fields are mandatory");
+        if(!data.fullName) {
+            toast.error("Full name is mandatory");
             return;
         }
         if(data.fullName.length < 5) {
-            toast.error("Name cannot be of less than 5 characters");
+            toast.error("Name must be at least 5 characters");
             return;
         }
+
         const formData = new FormData();
         formData.append("fullName", data.fullName);
-        formData.append("avatar", data.avatar);
-        console.log(formData.entries().next())
-        console.log(formData.entries().next())
-        await dispatch(updateProfile([data.userId, formData]));
+        if (data.avatar) {
+            formData.append("avatar", data.avatar);
+        }
 
+        toast.loading("Updating your profile...");
+        const res = await dispatch(updateProfile([data.userId, formData]));
         await dispatch(getUserData());
 
-        navigate("/user/profile");
+        if (res?.payload?.success) {
+            toast.success("Profile updated successfully!");
+            navigate("/user/profile");
+        }
     }
 
     return (
         <HomeLayout>
-            <div className="flex items-center justify-center h-[100vh]">
-                <form
-                    onSubmit={onFormSubmit}
-                    className="flex flex-col justify-center gap-5 rounded-lg p-4 text-white w-80 min-h-[26rem] shadow-[0_0_10px_black]"
+            <div className="min-h-screen py-32 px-6 flex items-center justify-center bg-slate-50 dark:bg-slate-950 transition-colors duration-500">
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="w-full max-w-md"
                 >
-                    <h1 className="text-center text-2xl font-semibold">Edit profile</h1>
-                    <label className="cursor-pointer" htmlFor="image_uploads">
-                        {data.previewImage ? (
-                            <img 
-                                className="w-28 h-28 rounded-full m-auto"
-                                src={data.previewImage}
+                    <form
+                        onSubmit={onFormSubmit}
+                        className="glass-card bg-white dark:bg-slate-900/50 p-10 rounded-[3rem] shadow-2xl shadow-emerald-500/5 border border-white dark:border-slate-800 space-y-8"
+                    >
+                        <div className="flex items-center gap-4 mb-2">
+                            <button 
+                                type="button"
+                                onClick={() => navigate(-1)} 
+                                className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-emerald-500 transition-colors"
+                            >
+                                <ArrowLeft size={20} />
+                            </button>
+                            <h1 className="text-2xl font-black font-outfit text-slate-900 dark:text-white">Edit Profile</h1>
+                        </div>
 
+                        {/* Avatar Upload Section */}
+                        <div className="flex flex-col items-center gap-4">
+                            <label className="relative cursor-pointer group" htmlFor="image_uploads">
+                                <div className="w-32 h-32 rounded-full border-4 border-emerald-500/20 p-1 bg-gradient-to-br from-emerald-400 to-teal-600 shadow-xl overflow-hidden">
+                                    <img 
+                                        className="w-full h-full rounded-full object-cover border-4 border-white dark:border-slate-900 transition-transform group-hover:scale-110"
+                                        src={data.previewImage}
+                                        alt="Avatar Preview"
+                                    />
+                                </div>
+                                <div className="absolute bottom-0 right-0 w-10 h-10 bg-emerald-500 text-white rounded-full flex items-center justify-center border-4 border-white dark:border-slate-900 shadow-lg">
+                                    <Camera size={16} />
+                                </div>
+                            </label>
+                            <input 
+                                onChange={handleImageUpload}
+                                className="hidden"
+                                type="file"
+                                id="image_uploads"
+                                name="image_uploads"
+                                accept=".jpg, .png, .svg, .jpeg"
                             />
-                        ): (
-                            <BsPersonCircle className="w-28 h-28 rounded-full m-auto" />
-                        )}
-                    </label>
-                    <input 
-                        onChange={handleImageUpload}
-                        className="hidden"
-                        type="file"
-                        id="image_uploads"
-                        name="image_uploads"
-                        accept=".jpg, .png, .svg, .jpeg"
-                
-                    />
-                    <div className="flex flex-col gap-1">
-                        <label htmlFor="fullName" className="text-lg font-semibold">Full Name</label>
-                        <input 
-                            required
-                            type="text"
-                            name="fullName"
-                            id="fullName"
-                            placeholder="Enter your name"
-                            className="bg-transparent px-2 py-1 border"
-                            value={data.fullName}
-                            onChange={handleInputChange}
-                        
-                        />
-                    </div>
-                    <button type="submit" className="w-full bg-yellow-600 hover:bg-yellow-500 transition-all ease-in-out duration-300 rounded-sm py-2 text-lg cursor-pointer">
-                        Update profile
-                    </button>
-                    <Link to="/user/profile">
-                        <p className="link text-accent cursor-pointer flex items-center justify-center w-full gap-2">
-                            <AiOutlineArrowLeft /> Go back to profile
-                        </p>
-                    </Link>
-                </form>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Click to change avatar</p>
+                        </div>
+
+                        {/* Form Fields */}
+                        <div className="space-y-6">
+                            <div className="space-y-2">
+                                <label htmlFor="fullName" className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
+                                <div className="relative group">
+                                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
+                                    <input 
+                                        required
+                                        type="text"
+                                        name="fullName"
+                                        id="fullName"
+                                        placeholder="Enter your full name"
+                                        className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-sm font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                                        value={data.fullName}
+                                        onChange={handleInputChange}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <button 
+                            type="submit" 
+                            className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-emerald-500/20 hover:shadow-emerald-500/40 flex items-center justify-center gap-2"
+                        >
+                            <Save size={18} /> Save Changes
+                        </button>
+
+                        <Link to="/user/profile" className="block text-center text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-emerald-500 transition-colors">
+                            Cancel and Return
+                        </Link>
+                    </form>
+                </motion.div>
             </div>
         </HomeLayout>
     );

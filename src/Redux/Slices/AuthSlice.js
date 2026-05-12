@@ -151,6 +151,44 @@ export const updateCourseProgress = createAsyncThunk(
   }
 );
 
+// ================= SUBMIT QUIZ =================
+export const submitQuiz = createAsyncThunk(
+  "/user/quiz/submit",
+  async (data) => {
+    try {
+      let res = axiosInstance.post("/user/quiz/submit", data);
+      await toast.promise(res, {
+        loading: "Submitting quiz...",
+        success: (data) => data?.data?.message,
+        error: "Failed to submit quiz",
+      });
+      res = await res;
+      return res.data;
+    } catch (error) {
+      toast.error(error?.response?.data?.message);
+    }
+  }
+);
+
+// ================= SUBMIT ASSIGNMENT =================
+export const submitAssignment = createAsyncThunk(
+  "/user/assignment/submit",
+  async (data) => {
+    try {
+      let res = axiosInstance.post("/user/assignment/submit", data);
+      await toast.promise(res, {
+        loading: "Submitting assignment...",
+        success: (data) => data?.data?.message,
+        error: "Failed to submit assignment",
+      });
+      res = await res;
+      return res.data;
+    } catch (error) {
+      toast.error(error?.response?.data?.message);
+    }
+  }
+);
+
 // ================= SLICE =================
 
 const authSlice = createSlice({
@@ -201,6 +239,23 @@ const authSlice = createSlice({
       
       // UPDATE PROGRESS
       .addCase(updateCourseProgress.fulfilled, (state, action) => {
+        if (!action?.payload?.success) return;
+        
+        state.data.progress = action.payload.progress;
+        localStorage.setItem("data", JSON.stringify(state.data));
+      })
+
+      // SUBMIT QUIZ
+      .addCase(submitQuiz.fulfilled, (state, action) => {
+        if (!action?.payload?.success) return;
+        
+        state.data.progress = action.payload.progress;
+        state.data.weakTopics = action.payload.weakTopics;
+        localStorage.setItem("data", JSON.stringify(state.data));
+      })
+
+      // SUBMIT ASSIGNMENT
+      .addCase(submitAssignment.fulfilled, (state, action) => {
         if (!action?.payload?.success) return;
         
         state.data.progress = action.payload.progress;
