@@ -65,6 +65,81 @@ export const login = createAsyncThunk("auth/login", async (data) => {
   }
 });
 
+// ================= GOOGLE AUTH =================
+export const googleAuth = createAsyncThunk("auth/googleAuth", async (credential) => {
+  try {
+    let res = axiosInstance.post("/user/google-auth", { credential });
+
+    await toast.promise(res, {
+      loading: "Authenticating with Google...",
+      success: (data) => data?.data?.message,
+      error: "Google Authentication failed",
+    });
+
+    res = await res;
+
+    return res.data;
+  } catch (error) {
+    toast.error(error?.response?.data?.message || error.message);
+  }
+});
+
+// ================= OTP FLOW =================
+export const sendSignupOtp = createAsyncThunk("auth/sendSignupOtp", async (data) => {
+  try {
+    let res = axiosInstance.post("/user/otp-signup", data);
+    await toast.promise(res, { loading: "Sending OTP...", success: "OTP sent to email", error: "Failed to send OTP" });
+    return (await res).data;
+  } catch (error) {
+    toast.error(error?.response?.data?.message || "Error sending OTP");
+    throw error;
+  }
+});
+
+export const verifySignupOtp = createAsyncThunk("auth/verifySignupOtp", async (data) => {
+  try {
+    let res = axiosInstance.post("/user/verify-signup-otp", data);
+    await toast.promise(res, { loading: "Verifying...", success: "Verified successfully", error: "Verification failed" });
+    return (await res).data;
+  } catch (error) {
+    toast.error(error?.response?.data?.message || "Invalid OTP");
+    throw error;
+  }
+});
+
+export const sendLoginOtp = createAsyncThunk("auth/sendLoginOtp", async (data) => {
+  try {
+    let res = axiosInstance.post("/user/otp-login", data);
+    await toast.promise(res, { loading: "Sending OTP...", success: "OTP sent to email", error: "Failed to send OTP" });
+    return (await res).data;
+  } catch (error) {
+    toast.error(error?.response?.data?.message || "Error sending OTP");
+    throw error;
+  }
+});
+
+export const verifyLoginOtp = createAsyncThunk("auth/verifyLoginOtp", async (data) => {
+  try {
+    let res = axiosInstance.post("/user/verify-login-otp", data);
+    await toast.promise(res, { loading: "Verifying...", success: "Logged in successfully", error: "Verification failed" });
+    return (await res).data;
+  } catch (error) {
+    toast.error(error?.response?.data?.message || "Invalid OTP");
+    throw error;
+  }
+});
+
+export const resendOtp = createAsyncThunk("auth/resendOtp", async (data) => {
+  try {
+    let res = axiosInstance.post("/user/resend-otp", data);
+    await toast.promise(res, { loading: "Resending OTP...", success: "OTP resent successfully", error: "Failed to resend" });
+    return (await res).data;
+  } catch (error) {
+    toast.error(error?.response?.data?.message || "Error resending OTP");
+    throw error;
+  }
+});
+
 // ================= LOGOUT =================
 export const logout = createAsyncThunk("auth/logout", async () => {
   try {
@@ -207,6 +282,44 @@ const authSlice = createSlice({
         localStorage.setItem("isLoggedIn", "true");
         localStorage.setItem("role", user?.role || "");
 
+        state.isLoggedIn = true;
+        state.data = user;
+        state.role = user?.role || "";
+      })
+
+      // GOOGLE AUTH
+      .addCase(googleAuth.fulfilled, (state, action) => {
+        const user = action?.payload?.user;
+        if (!user) return;
+
+        localStorage.setItem("data", JSON.stringify(user));
+        localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("role", user?.role || "");
+
+        state.isLoggedIn = true;
+        state.data = user;
+        state.role = user?.role || "";
+      })
+
+      // VERIFY SIGNUP OTP
+      .addCase(verifySignupOtp.fulfilled, (state, action) => {
+        const user = action?.payload?.user;
+        if (!user) return;
+        localStorage.setItem("data", JSON.stringify(user));
+        localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("role", user?.role || "");
+        state.isLoggedIn = true;
+        state.data = user;
+        state.role = user?.role || "";
+      })
+
+      // VERIFY LOGIN OTP
+      .addCase(verifyLoginOtp.fulfilled, (state, action) => {
+        const user = action?.payload?.user;
+        if (!user) return;
+        localStorage.setItem("data", JSON.stringify(user));
+        localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("role", user?.role || "");
         state.isLoggedIn = true;
         state.data = user;
         state.role = user?.role || "";

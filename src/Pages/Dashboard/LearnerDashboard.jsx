@@ -19,9 +19,10 @@ import HomeLayout from "../../Layouts/HomeLayout";
 import { getLearnerDashboardData } from "../../Redux/Slices/DashboardSlice";
 
 const ProgressRing = ({ percentage, color = "emerald" }) => {
+    const validPercentage = isNaN(percentage) || percentage === null ? 0 : Number(percentage);
     const radius = 45;
     const circumference = 2 * Math.PI * radius;
-    const strokeDashoffset = circumference - (percentage / 100) * circumference;
+    const strokeDashoffset = circumference - (validPercentage / 100) * circumference;
 
     return (
         <div className="relative inline-flex items-center justify-center">
