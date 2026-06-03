@@ -2,32 +2,43 @@ import './App.css';
 
 import { Route, Routes } from 'react-router-dom';
 
-import RequireAuth from './Components/Auth/RequireAuth';
-import AboutUs from './Pages/AboutUs';
-import Contact from './Pages/Contact';
-import CourseDescription from './Pages/Course/CourseDescription';
-import CourseList from './Pages/Course/CourseList';
-import CreateCourse from './Pages/Course/CreateCourse';
-import AddLecture from './Pages/Dashboard/Addlecture';
-import AdminDashboard from './Pages/Dashboard/AdminDashboard';
-import LearnerDashboard from './Pages/Dashboard/LearnerDashboard';
-import Displaylectures from './Pages/Dashboard/Displaylectures';
-import Denied from './Pages/Denied';
-import HomePage from './Pages/HomePage';
-import Login from './Pages/Login';
-import NotFound from './Pages/NotFound';
-import Checkout from './Pages/Payment/Checkout';
-import CheckoutFailure from './Pages/Payment/CheckoutFailure';
-import CheckoutSuccess from './Pages/Payment/CheckoutSuccess';
-import Signup from './Pages/Signup';
-import ChangePassword from './Pages/Password/ChangePassword';
-import EditProfile from './Pages/User/EditProfile';
-import Profile from './Pages/User/Profile';
-import Mentors from './Pages/Mentors';
-import SuccessStories from './Pages/SuccessStories';
-import Blog from './Pages/Blog';
-import BlogDetails from './Pages/BlogDetails';
-import CreateBlog from './Pages/CreateBlog';
+import RequireAuth from './features/auth/components/RequireAuth';
+import AboutUs from './features/public/pages/AboutUs';
+import Contact from './features/public/pages/Contact';
+import CourseDescription from './features/courses/pages/CourseDescription';
+import CourseList from './features/courses/pages/CourseList';
+import CreateCourse from './features/courses/pages/CreateCourse';
+import AddLecture from './features/courses/pages/Addlecture';
+import AdminDashboard from './features/admin/pages/AdminDashboard';
+import LearnerDashboard from './features/users/pages/LearnerDashboard';
+import Displaylectures from './features/courses/pages/Displaylectures';
+import ManageCurriculum from './features/courses/pages/ManageCurriculum';
+import Denied from './features/auth/pages/Denied';
+import HomePage from './features/public/pages/HomePage';
+import Login from './features/auth/pages/Login';
+import NotFound from './features/auth/pages/NotFound';
+import Checkout from './features/payments/pages/Checkout';
+import CheckoutFailure from './features/payments/pages/CheckoutFailure';
+import CheckoutSuccess from './features/payments/pages/CheckoutSuccess';
+import Signup from './features/auth/pages/Signup';
+import ChangePassword from './features/users/pages/ChangePassword';
+import EditProfile from './features/users/pages/EditProfile';
+import Profile from './features/users/pages/Profile';
+import Mentors from './features/public/pages/Mentors';
+import SuccessStories from './features/public/pages/SuccessStories';
+import Blog from './features/public/pages/Blog';
+import BlogDetails from './features/public/pages/BlogDetails';
+import CreateBlog from './features/public/pages/CreateBlog';
+import AdminSignup from './features/admin/pages/AdminSignup';
+import AdminLogin from './features/admin/pages/AdminLogin';
+import SuperAdminDashboard from './features/superAdmin/pages/SuperAdminDashboard';
+import UserManagement from './features/superAdmin/pages/UserManagement';
+import AdminManagement from './features/superAdmin/pages/AdminManagement';
+import ActivityLogs from './features/superAdmin/pages/ActivityLogs';
+import SystemMonitoring from './features/superAdmin/pages/SystemMonitoring';
+import SuperAdminSignup from './features/superAdmin/pages/SuperAdminSignup';
+import SuperAdminLogin from './features/superAdmin/pages/SuperAdminLogin';
+import SuperAdminSettings from './features/superAdmin/pages/SuperAdminSettings';
 
 function App() {
 
@@ -48,10 +59,17 @@ function App() {
 
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
+        
+        <Route path="/admin/signup" element={<AdminSignup />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
+
+        <Route path="/super-admin/signup" element={<SuperAdminSignup />} />
+        <Route path="/super-admin/login" element={<SuperAdminLogin />} />
 
         <Route element={<RequireAuth allowedRoles={["ADMIN"]} />}>
           <Route path="/course/create" element={<CreateCourse />} />
           <Route path="/course/addlecture" element={<AddLecture />} />
+          <Route path="/course/manage/:id" element={<ManageCurriculum />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/blog/create" element={<CreateBlog />} />
         </Route>
@@ -67,6 +85,16 @@ function App() {
           <Route path='/checkout/fail' element={<CheckoutFailure />} />
           <Route path='/course/displaylectures' element={<Displaylectures />}/>
         </Route>
+
+        <Route element={<RequireAuth allowedRoles={["SUPER_ADMIN"]} />}>
+          <Route path="/super-admin/dashboard" element={<SuperAdminDashboard />} />
+          <Route path="/super-admin/users" element={<UserManagement />} />
+          <Route path="/super-admin/admins" element={<AdminManagement />} />
+          <Route path="/super-admin/logs" element={<ActivityLogs />} />
+          <Route path="/super-admin/system" element={<SystemMonitoring />} />
+          <Route path="/super-admin/settings" element={<SuperAdminSettings />} />
+        </Route>
+
         <Route path="*" element={<NotFound />}></Route>
       </Routes>
     </>
