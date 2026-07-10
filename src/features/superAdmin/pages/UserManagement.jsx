@@ -24,6 +24,20 @@ const UserManagement = () => {
     fetchUsers();
   }, []);
 
+  const handlePromote = async (userId, newRole) => {
+    if (!window.confirm(`Are you sure you want to promote this user to ${newRole}?`)) return;
+    try {
+      const response = await superAdminService.updateRole(userId, { role: newRole });
+      if (response.data.success) {
+        toast.success(`User promoted to ${newRole} successfully`);
+        setSelectedUser(null);
+        fetchUsers();
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || `Failed to promote user to ${newRole}`);
+    }
+  };
+
   const filteredUsers = useMemo(() => {
     if (!searchQuery) return users;
     const lowerQuery = searchQuery.toLowerCase();
@@ -230,7 +244,21 @@ const UserManagement = () => {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-6 border-t border-gray-200 bg-gray-50 flex justify-end sticky bottom-0">
+            <div className="p-6 border-t border-gray-200 bg-gray-50 flex justify-between items-center sticky bottom-0">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handlePromote(selectedUser._id, 'ADMIN')}
+                  className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition-colors shadow-sm text-sm"
+                >
+                  Promote to Admin
+                </button>
+                <button
+                  onClick={() => handlePromote(selectedUser._id, 'SUPER_ADMIN')}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors shadow-sm text-sm"
+                >
+                  Promote to Super Admin
+                </button>
+              </div>
               <button 
                 onClick={() => setSelectedUser(null)}
                 className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 font-bold py-2 px-6 rounded-lg transition-colors shadow-sm"

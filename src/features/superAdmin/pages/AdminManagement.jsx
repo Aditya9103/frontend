@@ -57,7 +57,7 @@ const AdminManagement = () => {
         fetchAdmins();
       }
     } catch (error) {
-      toast.error('Failed to revoke admin');
+      toast.error(error?.response?.data?.message || 'Failed to revoke admin');
     }
   };
 
@@ -90,7 +90,7 @@ const AdminManagement = () => {
         fetchAdmins();
       }
     } catch (error) {
-      toast.error('Failed to update permissions');
+      toast.error(error?.response?.data?.message || 'Failed to update permissions');
     }
   };
 
@@ -128,10 +128,15 @@ const AdminManagement = () => {
                     <p className="text-gray-900 whitespace-no-wrap">{admin.email}</p>
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    {admin.permissions?.length > 0 ? (
-                      admin.permissions.map(p => <span key={p} className="bg-blue-100 text-blue-800 rounded px-2 py-1 mr-1 text-xs font-semibold">{p}</span>)
+                    {admin.permissions && admin.permissions.length > 0 ? (
+                      admin.permissions.map(p => {
+                        const permObj = AVAILABLE_PERMISSIONS.find(perm => perm.id === p);
+                        return <span key={p} className="bg-blue-100 text-blue-800 rounded px-2 py-1 mr-1 text-xs font-semibold inline-block mb-1">{permObj ? permObj.label : p}</span>;
+                      })
+                    ) : admin.permissions ? (
+                      <span className="text-gray-500 italic text-xs">No permissions</span>
                     ) : (
-                      <span className="text-gray-500 italic">All access (Legacy)</span>
+                      <span className="text-gray-500 italic text-xs">All access (Legacy)</span>
                     )}
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
@@ -184,6 +189,7 @@ const AdminManagement = () => {
                   type="password" 
                   required
                   minLength="8"
+                  autoComplete="new-password"
                   className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:ring focus:border-blue-500" 
                   value={newAdmin.password}
                   onChange={(e) => setNewAdmin({...newAdmin, password: e.target.value})}

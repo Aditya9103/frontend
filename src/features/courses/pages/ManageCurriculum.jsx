@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
-import { addSection, addQuiz, addAssignment } from "../redux/CourseSlice";
+import { addSection, addQuiz, addAssignment, getCourseSubmissions, addLectureToSection, gradeUserAssignment } from "../redux/CourseSlice";
 import toast from "react-hot-toast";
-import { Plus, BookOpen, HelpCircle, FileText, X } from "lucide-react";
+import { Plus, BookOpen, HelpCircle, FileText, X, Video } from "lucide-react";
+import axiosInstance from "../../../core/config/axiosInstance";
+import axios from "axios";
 
 export default function ManageCurriculum() {
     const { state } = useLocation();
@@ -29,6 +31,18 @@ export default function ManageCurriculum() {
     const [assignmentDescription, setAssignmentDescription] = useState("");
     const [assignmentDueDate, setAssignmentDueDate] = useState("");
     const [assignmentFile, setAssignmentFile] = useState(null);
+
+    // Lecture State
+    const [showLectureModal, setShowLectureModal] = useState(false);
+    const [lectureTitle, setLectureTitle] = useState("");
+    const [lectureDescription, setLectureDescription] = useState("");
+    const [lectureFile, setLectureFile] = useState(null);
+
+    // Submissions State
+    const [showSubmissionsModal, setShowSubmissionsModal] = useState(false);
+    const [submissionsData, setSubmissionsData] = useState([]);
+    const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
+    const [assignmentScores, setAssignmentScores] = useState({});
 
     if (!state) {
         navigate("/courses");
@@ -76,17 +90,104 @@ export default function ManageCurriculum() {
         }
     };
 
+    const handleViewSubmissions = async () => {
+        setIsLoadingSubmissions(true);
+        setShowSubmissionsModal(true);
+        const res = await dispatch(getCourseSubmissions(state._id));
+        if (res?.payload) {
+            setSubmissionsData(res.payload);
+        }
+        setIsLoadingSubmissions(false);
+    };
+
+    const handleAddLecture = async () => {
+        if (!lectureTitle || !lectureDescription || !lectureFile) return toast.error("Title, description, and file required");
+        
+        const toastId = toast.loading("Uploading lecture... 0%");
+        
+        try {
+            // 1. Get Signature from Backend
+            const sigRes = await axiosInstance.get('/courses/cloudinary-signature');
+            const { signature, timestamp, cloudName, apiKey } = sigRes.data;
+
+            // 2. Direct Upload to Cloudinary
+            const formData = new FormData();
+            formData.append('file', lectureFile);
+            formData.append('signature', signature);
+            formData.append('timestamp', timestamp);
+            formData.append('api_key', apiKey);
+            formData.append('folder', 'lms_lectures');
+
+            const uploadRes = await axios.post(`https://api.cloudinary.com/v1_1/${cloudName}/video/upload`, formData, {
+                onUploadProgress: (progressEvent) => {
+                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                    toast.loading(`Uploading lecture... ${percentCompleted}%`, { id: toastId });
+                }
+            });
+
+            // 3. Send Cloudinary details to backend
+            const { public_id, secure_url } = uploadRes.data;
+            
+            const res = await dispatch(addLectureToSection({
+                id: state._id,
+                sectionId: activeSectionId,
+                title: lectureTitle,
+                description: lectureDescription,
+                public_id,
+                secure_url
+            }));
+            
+            if (res?.payload?.success) {
+                toast.success("Lecture added successfully", { id: toastId });
+                setSections(res.payload.course.sections);
+                setShowLectureModal(false);
+                setLectureTitle("");
+                setLectureDescription("");
+                setLectureFile(null);
+            } else {
+                toast.error("Failed to add lecture to course", { id: toastId });
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to upload lecture", { id: toastId });
+        }
+    };
+
+    const handleGradeAssignment = async (userId, assignmentId) => {
+        const score = assignmentScores[`${userId}-${assignmentId}`];
+        if (score === undefined || score === "") return toast.error("Enter a valid score");
+
+        const res = await dispatch(gradeUserAssignment({
+            userId,
+            courseId: state._id,
+            assignmentId,
+            score: Number(score)
+        }));
+
+        if (res?.payload) {
+            const updatedSubmissions = await dispatch(getCourseSubmissions(state._id));
+            if (updatedSubmissions?.payload) {
+                setSubmissionsData(updatedSubmissions.payload);
+            }
+        }
+    };
+
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-8 pt-24 font-inter text-gray-800 dark:text-gray-200">
+        <div className="font-inter text-gray-800 dark:text-gray-200">
             <div className="max-w-4xl mx-auto space-y-8">
                 <div className="flex justify-between items-center">
                     <div>
                         <h1 className="text-3xl font-black font-outfit text-gray-900 dark:text-white">Manage Curriculum</h1>
                         <p className="text-sm text-gray-500">Course: {state.title}</p>
                     </div>
-                    <button onClick={() => setShowSectionModal(true)} className="px-6 py-3 bg-yellow-500 text-white rounded-xl font-bold hover:scale-105 transition-all">
-                        + Add Section
-                    </button>
+                    <div className="flex gap-4">
+                        <button onClick={handleViewSubmissions} className="px-6 py-3 bg-blue-500 text-white rounded-xl font-bold hover:scale-105 transition-all">
+                            View Submissions
+                        </button>
+                        <button onClick={() => setShowSectionModal(true)} className="px-6 py-3 bg-yellow-500 text-white rounded-xl font-bold hover:scale-105 transition-all">
+                            + Add Section
+                        </button>
+                    </div>
                 </div>
 
                 <div className="space-y-6">
@@ -97,12 +198,19 @@ export default function ManageCurriculum() {
                                     Section {idx + 1}: {section.title}
                                 </h2>
                                 <div className="flex gap-2">
+                                    <button onClick={() => { setActiveSectionId(section._id); setShowLectureModal(true); }} className="px-3 py-1 bg-green-500/10 text-green-500 text-xs font-bold rounded-lg hover:bg-green-500 hover:text-white transition-all">+ Lecture</button>
                                     <button onClick={() => { setActiveSectionId(section._id); setShowQuizModal(true); }} className="px-3 py-1 bg-purple-500/10 text-purple-500 text-xs font-bold rounded-lg hover:bg-purple-500 hover:text-white transition-all">+ Quiz</button>
                                     <button onClick={() => { setActiveSectionId(section._id); setShowAssignmentModal(true); }} className="px-3 py-1 bg-blue-500/10 text-blue-500 text-xs font-bold rounded-lg hover:bg-blue-500 hover:text-white transition-all">+ Assignment</button>
                                 </div>
                             </div>
                             
                             <div className="space-y-3 pl-4 border-l-2 border-gray-100 dark:border-gray-800">
+                                {section.lectures?.map((l, lIdx) => (
+                                    <div key={`lec-${lIdx}`} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-950/50 rounded-xl">
+                                        <div className="w-8 h-8 bg-green-500/10 text-green-500 rounded-lg flex items-center justify-center"><Video size={16} /></div>
+                                        <p className="font-bold text-sm">{l.title}</p>
+                                    </div>
+                                ))}
                                 {section.quizzes?.map((q, qIdx) => (
                                     <div key={qIdx} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-950/50 rounded-xl">
                                         <div className="w-8 h-8 bg-purple-500/10 text-purple-500 rounded-lg flex items-center justify-center"><HelpCircle size={16} /></div>
@@ -115,7 +223,7 @@ export default function ManageCurriculum() {
                                         <p className="font-bold text-sm">{a.title}</p>
                                     </div>
                                 ))}
-                                {(!section.quizzes?.length && !section.assignments?.length) && (
+                                {(!section.lectures?.length && !section.quizzes?.length && !section.assignments?.length) && (
                                     <p className="text-sm text-gray-400 italic">No tasks added to this section yet.</p>
                                 )}
                             </div>
@@ -135,6 +243,27 @@ export default function ManageCurriculum() {
                         </div>
                         <input value={sectionTitle} onChange={e => setSectionTitle(e.target.value)} placeholder="e.g. Introduction to React" className="w-full p-3 bg-gray-100 dark:bg-gray-800 rounded-xl outline-none" />
                         <button onClick={handleAddSection} className="w-full py-3 bg-yellow-500 text-white rounded-xl font-bold hover:bg-yellow-600 transition-all">Add Section</button>
+                    </div>
+                </div>
+            )}
+
+            {/* Lecture Modal */}
+            {showLectureModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-md p-6 space-y-4">
+                        <div className="flex justify-between items-center">
+                            <h3 className="font-black text-xl">New Lecture</h3>
+                            <button onClick={() => setShowLectureModal(false)}><X className="text-gray-400" /></button>
+                        </div>
+                        <input value={lectureTitle} onChange={e => setLectureTitle(e.target.value)} placeholder="Lecture Title" className="w-full p-3 bg-gray-100 dark:bg-gray-800 rounded-xl outline-none" />
+                        <textarea value={lectureDescription} onChange={e => setLectureDescription(e.target.value)} placeholder="Description" className="w-full p-3 bg-gray-100 dark:bg-gray-800 rounded-xl outline-none min-h-[100px]" />
+                        
+                        <div className="space-y-1">
+                            <p className="text-xs font-bold text-gray-500">Upload Video</p>
+                            <input type="file" accept="video/*" onChange={e => setLectureFile(e.target.files[0])} className="w-full p-2 bg-gray-100 dark:bg-gray-800 rounded-xl outline-none text-sm" />
+                        </div>
+
+                        <button onClick={handleAddLecture} className="w-full py-3 bg-yellow-500 text-white rounded-xl font-bold hover:bg-yellow-600 transition-all mt-4">Save Lecture</button>
                     </div>
                 </div>
             )}
@@ -204,6 +333,102 @@ export default function ManageCurriculum() {
                         </div>
 
                         <button onClick={handleAddAssignment} className="w-full py-3 bg-yellow-500 text-white rounded-xl font-bold hover:bg-yellow-600 transition-all mt-4">Save Assignment</button>
+                    </div>
+                </div>
+            )}
+            {/* Submissions Modal */}
+            {showSubmissionsModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-4xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center">
+                            <h3 className="font-black text-2xl text-gray-900 dark:text-white">Student Submissions</h3>
+                            <button onClick={() => setShowSubmissionsModal(false)} className="text-gray-400 hover:text-rose-500 transition-all"><X size={28} /></button>
+                        </div>
+                        
+                        {isLoadingSubmissions ? (
+                            <div className="py-20 text-center font-bold text-gray-500">Loading submissions...</div>
+                        ) : submissionsData.length === 0 ? (
+                            <div className="py-20 text-center font-bold text-gray-500">No submissions yet for this course.</div>
+                        ) : (
+                            <div className="space-y-6">
+                                {submissionsData.map((user, idx) => (
+                                    <div key={idx} className="p-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-200 dark:border-gray-700 space-y-4">
+                                        <div className="flex items-center gap-4 border-b border-gray-200 dark:border-gray-700 pb-4">
+                                            <div className="w-12 h-12 bg-blue-500/10 text-blue-500 rounded-full flex items-center justify-center font-black text-xl">
+                                                {user.fullName.charAt(0)}
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-lg text-gray-900 dark:text-white">{user.fullName}</p>
+                                                <p className="text-sm text-gray-500">{user.email}</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <h4 className="font-bold text-sm text-gray-500 uppercase tracking-widest mb-3">Quizzes</h4>
+                                                {user.completedQuizzes?.length > 0 ? (
+                                                    <div className="space-y-2">
+                                                        {user.completedQuizzes.map((q, qIdx) => (
+                                                            <div key={qIdx} className="flex justify-between items-center bg-white dark:bg-gray-900 p-3 rounded-xl border border-gray-100 dark:border-gray-800">
+                                                                <span className="font-bold text-sm">{q.topic || 'Quiz'}</span>
+                                                                <span className="text-xs font-black bg-yellow-500/10 text-yellow-500 px-2 py-1 rounded-lg">
+                                                                    Score: {q.score} / {q.totalQuestions}
+                                                                </span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ) : <p className="text-sm text-gray-400 italic">No quizzes completed.</p>}
+                                            </div>
+                                            
+                                            <div>
+                                                <h4 className="font-bold text-sm text-gray-500 uppercase tracking-widest mb-3">Assignments</h4>
+                                                {user.completedAssignments?.length > 0 ? (
+                                                    <div className="space-y-2">
+                                                        {user.completedAssignments.map((a, aIdx) => (
+                                                            <div key={aIdx} className="flex flex-col gap-2 bg-white dark:bg-gray-900 p-3 rounded-xl border border-gray-100 dark:border-gray-800">
+                                                                <div className="flex justify-between items-center">
+                                                                    <span className="font-bold text-sm">Assignment ID: {a.assignmentId.slice(-4)}</span>
+                                                                    {a.fileUrl ? (
+                                                                        <a 
+                                                                            href={a.fileUrl} 
+                                                                            target="_blank" 
+                                                                            rel="noopener noreferrer" 
+                                                                            className="text-xs font-black bg-blue-500/10 text-blue-500 px-2 py-1 rounded-lg hover:bg-blue-500 hover:text-white transition-all flex items-center gap-1"
+                                                                        >
+                                                                            <FileText size={12} /> View File
+                                                                        </a>
+                                                                    ) : (
+                                                                        <span className="text-xs font-black bg-gray-500/10 text-gray-500 px-2 py-1 rounded-lg">No File</span>
+                                                                    )}
+                                                                </div>
+                                                                <div className="flex items-center gap-2 mt-2">
+                                                                    <input 
+                                                                        type="number" 
+                                                                        placeholder="Score" 
+                                                                        className="w-20 p-1 text-sm bg-gray-50 dark:bg-gray-800 rounded-lg outline-none border border-gray-200 dark:border-gray-700"
+                                                                        value={assignmentScores[`${user.userId}-${a.assignmentId}`] || a.score || ""}
+                                                                        onChange={(e) => setAssignmentScores(prev => ({...prev, [`${user.userId}-${a.assignmentId}`]: e.target.value}))}
+                                                                    />
+                                                                    <button 
+                                                                        onClick={() => handleGradeAssignment(user.userId, a.assignmentId)}
+                                                                        className="px-2 py-1 bg-yellow-500 text-white text-xs font-bold rounded-lg hover:bg-yellow-600 transition-all"
+                                                                    >
+                                                                        Save Score
+                                                                    </button>
+                                                                </div>
+                                                                {a.score !== undefined && (
+                                                                    <p className="text-xs text-green-500 font-bold mt-1">Graded: {a.score}</p>
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ) : <p className="text-sm text-gray-400 italic">No assignments submitted.</p>}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

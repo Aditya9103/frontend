@@ -39,6 +39,8 @@ import SystemMonitoring from './features/superAdmin/pages/SystemMonitoring';
 import SuperAdminSignup from './features/superAdmin/pages/SuperAdminSignup';
 import SuperAdminLogin from './features/superAdmin/pages/SuperAdminLogin';
 import SuperAdminSettings from './features/superAdmin/pages/SuperAdminSettings';
+import AdminLayout from './shared/layouts/AdminLayout';
+import ManageCourses from './features/admin/pages/ManageCourses';
 
 function App() {
 
@@ -67,11 +69,14 @@ function App() {
         <Route path="/super-admin/login" element={<SuperAdminLogin />} />
 
         <Route element={<RequireAuth allowedRoles={["ADMIN"]} />}>
-          <Route path="/course/create" element={<CreateCourse />} />
-          <Route path="/course/addlecture" element={<AddLecture />} />
-          <Route path="/course/manage/:id" element={<ManageCurriculum />} />
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/blog/create" element={<CreateBlog />} />
+          <Route element={<AdminLayout />}>
+            <Route path="/course/create" element={<CreateCourse />} />
+            <Route path="/course/addlecture" element={<AddLecture />} />
+            <Route path="/course/manage/:id" element={<ManageCurriculum />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/courses" element={<ManageCourses />} />
+            <Route path="/blog/create" element={<CreateBlog />} />
+          </Route>
         </Route>
 
         <Route element={<RequireAuth allowedRoles={["ADMIN", "USER"]} />}>

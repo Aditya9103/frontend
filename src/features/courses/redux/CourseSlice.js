@@ -73,6 +73,25 @@ export const addSection = createAsyncThunk(
   }
 );
 
+export const addLectureToSection = createAsyncThunk(
+  "/course/addLectureToSection",
+  async (data) => {
+    try {
+      const response = await courseService.addLectureToSection(data.id, data.sectionId, {
+        title: data.title,
+        description: data.description,
+        public_id: data.public_id,
+        secure_url: data.secure_url
+      });
+      toast.success("Lecture metadata saved successfully");
+      return response.data;
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to add lecture metadata");
+      throw error;
+    }
+  }
+);
+
 export const addQuiz = createAsyncThunk(
   "/course/addQuiz",
   async (data) => {
@@ -102,6 +121,33 @@ export const addAssignment = createAsyncThunk(
       return response.data;
     } catch (error) {
       toast.error(error?.response?.data?.message || "Failed to add assignment");
+      throw error;
+    }
+  }
+);
+
+export const getCourseSubmissions = createAsyncThunk(
+  "/course/getSubmissions",
+  async (id) => {
+    try {
+      const response = await courseService.getCourseSubmissions(id);
+      return response.data.submissions;
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to fetch submissions");
+      throw error;
+    }
+  }
+);
+
+export const gradeUserAssignment = createAsyncThunk(
+  "/course/gradeAssignment",
+  async (data) => {
+    try {
+      const response = await courseService.gradeAssignment(data);
+      toast.success("Assignment graded successfully");
+      return response.data;
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to grade assignment");
       throw error;
     }
   }
