@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Outlet, Link } from 'react-router-dom';
-import { Sun, Moon, EyeOff, Eye, User } from 'lucide-react';
+import { Eye, EyeOff, Moon, Sun, User } from 'lucide-react';
+import React, { useEffect,useState } from 'react';
+import { Link,Outlet } from 'react-router-dom';
+
 import AdminSidebar from '../../features/admin/components/AdminSidebar';
 
 function AdminLayout() {

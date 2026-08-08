@@ -1,6 +1,6 @@
-import React from 'react';
 import { motion } from 'framer-motion';
-import { List, CheckCircle, FileText, MessageSquare, Bookmark } from 'lucide-react';
+import { Bookmark,CheckCircle, FileText, List, MessageSquare } from 'lucide-react';
+import React from 'react';
 
 const LectureTabsNav = ({ activeTab, setActiveTab }) => {
     return (

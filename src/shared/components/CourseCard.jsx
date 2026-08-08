@@ -1,6 +1,6 @@
+import { motion } from 'framer-motion';
 import { BookOpen, User as UserIcon } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
-import { motion } from 'framer-motion';
 
 function CourseCard({ data }) {
     const navigate = useNavigate();

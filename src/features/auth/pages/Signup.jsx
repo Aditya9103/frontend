@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+import { GoogleLogin } from '@react-oauth/google';
+import { useEffect,useRef, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { BsPersonCircle } from 'react-icons/bs';
 import { useDispatch } from 'react-redux';
@@ -6,8 +7,7 @@ import { Link, useNavigate } from 'react-router-dom';
 
 import { isEmail, isValidPassword } from '../../../core/config/regexMatcher';
 import HomeLayout from '../../../shared/layouts/HomeLayout';
-import { sendSignupOtp, verifySignupOtp, resendOtp, googleAuth } from '../redux/AuthSlice';
-import { GoogleLogin } from '@react-oauth/google';
+import { googleAuth,resendOtp, sendSignupOtp, verifySignupOtp } from '../redux/AuthSlice';
 
 function Signup() {
     const dispatch = useDispatch();

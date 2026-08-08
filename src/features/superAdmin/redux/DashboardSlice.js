@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import superAdminService from "../../../core/services/superAdmin.service";
 import toast from "react-hot-toast";
+
+import superAdminService from "../../../core/services/superAdmin.service";
 
 const initialState = {
   data: {},
@@ -11,14 +12,9 @@ export const getLearnerDashboardData = createAsyncThunk(
   async () => {
     try {
       const response = await superAdminService.getLearnerDashboardData();
-      toast.promise(Promise.resolve(response), {
-        loading: "Loading dashboard data...",
-        success: "Dashboard loaded successfully",
-        error: "Failed to load dashboard data",
-      });
-      return response.data;
+      return response.data.data;
     } catch (error) {
-      toast.error(error?.response?.data?.message);
+      toast.error(error?.response?.data?.error?.message || 'Failed to load dashboard data');
     }
   }
 );
@@ -30,7 +26,8 @@ const dashboardSlice = createSlice({
   extraReducers: (builder) => {
     builder.addCase(getLearnerDashboardData.fulfilled, (state, action) => {
       if (action.payload) {
-        state.data = action.payload.data;
+        // thunk now returns res.data.data directly (the payload object)
+        state.data = action.payload;
       }
     });
   },

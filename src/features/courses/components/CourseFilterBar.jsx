@@ -1,6 +1,6 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { LayoutGrid, SlidersHorizontal } from 'lucide-react';
+import React from 'react';
 
 const categories = ["All", "Web Development", "Design", "Data Science", "Marketing", "Business", "Photography"];
 

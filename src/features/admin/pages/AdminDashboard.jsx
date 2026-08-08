@@ -4,10 +4,10 @@ import { Bar, Pie } from "react-chartjs-2";
 import { BsCollectionPlayFill, BsTrash } from "react-icons/bs";
 import { FaUsers } from "react-icons/fa";
 import { FcSalesPerformance } from "react-icons/fc";
+import { FiBookOpen } from "react-icons/fi";
 import { GiMoneyStack } from "react-icons/gi";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { FiBookOpen } from "react-icons/fi";
 
 import { deleteCourse, getAllCourses } from "../../courses/redux/CourseSlice";
 import { getPaymentRecord } from "../../payments/redux/RazorpaySlice";

@@ -1,5 +1,5 @@
-import React from 'react';
 import { Play } from 'lucide-react';
+import React from 'react';
 
 const PlaylistTab = ({ lectures, currentVideo, setCurrentVideo }) => {
     return (

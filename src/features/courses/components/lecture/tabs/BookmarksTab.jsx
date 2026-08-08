@@ -1,5 +1,5 @@
-import React from 'react';
 import { Bookmark, Clock, Trash2 } from 'lucide-react';
+import React from 'react';
 
 const BookmarksTab = ({ bookmarks, seekToTime, formatTime }) => {
     return (

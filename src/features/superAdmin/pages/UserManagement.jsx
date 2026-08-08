@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import SuperAdminSidebar from '../components/SuperAdminSidebar';
-import superAdminService from '../../../core/services/superAdmin.service';
+import React, { useEffect, useMemo,useState } from 'react';
 import toast from 'react-hot-toast';
-import { FiSearch, FiX, FiCalendar, FiClock, FiShield, FiBook, FiAward, FiStar } from 'react-icons/fi';
+import { FiAward, FiBook, FiCalendar, FiClock, FiSearch, FiShield, FiStar,FiX } from 'react-icons/fi';
+
+import superAdminService from '../../../core/services/superAdmin.service';
+import SuperAdminSidebar from '../components/SuperAdminSidebar';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);

@@ -1,10 +1,11 @@
-import authSliceReducer from '../../features/auth/redux/AuthSlice';
 import { configureStore } from "@reduxjs/toolkit";
+
+import authSliceReducer from '../../features/auth/redux/AuthSlice';
 import courseSliceReducer from '../../features/courses/redux/CourseSlice';
 import lectureSliceReducer from '../../features/courses/redux/LectureSlice';
 import razorpaySliceReducer from '../../features/payments/redux/RazorpaySlice';
-import statSliceReducer from '../../features/superAdmin/redux/StatSlice';
 import dashboardSliceReducer from '../../features/superAdmin/redux/DashboardSlice';
+import statSliceReducer from '../../features/superAdmin/redux/StatSlice';
 
 const store = configureStore({
     reducer: {
@@ -15,7 +16,7 @@ const store = configureStore({
         stat: statSliceReducer,
         dashboard: dashboardSliceReducer
     },
-    devTools: true
+    devTools: import.meta.env.DEV,
 });
 
 export default store;

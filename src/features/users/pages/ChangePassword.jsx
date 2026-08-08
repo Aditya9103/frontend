@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
+import { ArrowLeft, Key, Lock, ShieldCheck } from 'lucide-react';
 import React, { useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { ArrowLeft, Key, Lock, ShieldCheck } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 

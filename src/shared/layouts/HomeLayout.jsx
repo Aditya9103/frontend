@@ -1,10 +1,10 @@
-import { LogOut, Menu, User, X, BookOpen, LayoutDashboard, Phone, Info, Home, Moon, Sun, Eye, EyeOff, Flame, Users, TrendingUp, Newspaper } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { BookOpen, Eye, EyeOff, Flame, Home, Info, LayoutDashboard, LogOut, Menu, Moon, Newspaper,Phone, Sun, TrendingUp, User, Users, X } from 'lucide-react';
+import { useEffect,useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useLocation,useNavigate } from 'react-router-dom';
 
-import Footer from '../components/Footer';
 import { logout } from '../../features/auth/redux/AuthSlice';
+import Footer from '../components/Footer';
 
 function HomeLayout({ children }) {
     const dispatch = useDispatch();

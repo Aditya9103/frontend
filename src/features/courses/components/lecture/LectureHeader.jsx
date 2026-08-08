@@ -1,5 +1,5 @@
-import React from 'react';
 import { ArrowLeft, Award } from 'lucide-react';
+import React from 'react';
 
 const LectureHeader = ({ navigate, state, currentVideo, lecturesLength, overallProgress, handleDownloadCertificate }) => {
     return (

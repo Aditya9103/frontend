@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import SuperAdminSidebar from '../components/SuperAdminSidebar';
 import toast from 'react-hot-toast';
+
+import SuperAdminSidebar from '../components/SuperAdminSidebar';
 
 const SuperAdminSettings = () => {
   const [activeTab, setActiveTab] = useState('general');

@@ -1,6 +1,6 @@
+import { AnimatePresence,motion } from 'framer-motion';
+import { ChevronRight, FilterX, LayoutGrid, Menu,SlidersHorizontal } from 'lucide-react';
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutGrid, SlidersHorizontal, ChevronRight, FilterX, Menu } from 'lucide-react';
 
 const categories = ["All", "Web Development", "Design", "Data Science", "Marketing", "Business", "Photography"];
 

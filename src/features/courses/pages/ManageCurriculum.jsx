@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import { useNavigate, useLocation } from "react-router-dom";
-import { addSection, addQuiz, addAssignment, getCourseSubmissions, addLectureToSection, gradeUserAssignment } from "../redux/CourseSlice";
-import toast from "react-hot-toast";
-import { Plus, BookOpen, HelpCircle, FileText, X, Video } from "lucide-react";
-import axiosInstance from "../../../core/config/axiosInstance";
 import axios from "axios";
+import { BookOpen, FileText, HelpCircle, Plus, Video,X } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import { useDispatch } from "react-redux";
+import { useLocation,useNavigate } from "react-router-dom";
+
+import axiosInstance from "../../../core/config/axiosInstance";
+import { addAssignment, addLectureToSection, addQuiz, addSection, getCourseSubmissions, gradeUserAssignment } from "../redux/CourseSlice";
 
 export default function ManageCurriculum() {
     const { state } = useLocation();

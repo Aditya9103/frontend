@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import superAdminService from "../../../core/services/superAdmin.service";
 import toast from "react-hot-toast";
+
+import superAdminService from "../../../core/services/superAdmin.service";
 
 const initialState = {
   allUsersCount: 0,
@@ -10,16 +11,9 @@ const initialState = {
 export const getStatsData = createAsyncThunk("stat/get", async () => {
   try {
     const response = await superAdminService.getStatsData();
-    toast.promise(Promise.resolve(response), {
-      loading: "Getting the stats...",
-      success: (data) => {
-        return data?.data?.message;
-      },
-      error: "Failed to load data stats",
-    });
-    return response.data;
+    return response.data.data;
   } catch (error) {
-    toast.error(error?.response?.data?.message);
+    toast.error(error?.response?.data?.error?.message || 'Failed to load stats');
   }
 });
 
@@ -29,6 +23,7 @@ const statSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(getStatsData.fulfilled, (state, action) => {
+      // thunk now returns res.data.data directly
       state.allUsersCount = action?.payload?.allUsersCount;
       state.subscribedCount = action?.payload?.subscribedUsersCount;
     });

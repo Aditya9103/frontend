@@ -1,11 +1,12 @@
-import { useState, useRef, useEffect } from 'react';
+import { GoogleLogin } from '@react-oauth/google';
+import { useEffect,useRef, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 
 import HomeLayout from '../../../shared/layouts/HomeLayout';
-import { login, googleAuth, sendLoginOtp, verifyLoginOtp, resendOtp } from '../redux/AuthSlice';
-import { GoogleLogin } from '@react-oauth/google';
+import { getErrorMessage } from '../../../shared/utils/apiError';
+import { googleAuth, login, resendOtp,sendLoginOtp, verifyLoginOtp } from '../redux/AuthSlice';
 
 function Login() {
     const dispatch = useDispatch();
@@ -18,7 +19,8 @@ function Login() {
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const [cooldown, setCooldown] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    
+    const [lockoutMessage, setLockoutMessage] = useState('');
+
     const otpRefs = useRef([]);
 
     useEffect(() => {
@@ -36,7 +38,8 @@ function Login() {
 
     async function handleLoginSubmit(event) {
         event.preventDefault();
-        
+        setLockoutMessage('');
+
         if (!loginData.email) {
             toast.error("Please enter your email");
             return;
@@ -50,15 +53,27 @@ function Login() {
             setIsSubmitting(true);
             const response = await dispatch(login(loginData));
             setIsSubmitting(false);
-            if(response?.payload?.success) navigate("/dashboard");
+            if (response?.payload?.success) {
+                navigate("/dashboard");
+            } else if (response?.error || response?.payload === undefined) {
+                // Check for machine-readable code on the rejected action
+                const code = response?.error?.code;
+                if (code === 'ACCOUNT_LOCKED' || code === 'RATE_LIMIT_EXCEEDED') {
+                    setLockoutMessage(getErrorMessage(code));
+                }
+            }
         } else {
-            // Send OTP
             setIsSubmitting(true);
             const response = await dispatch(sendLoginOtp({ email: loginData.email }));
             setIsSubmitting(false);
-            if(response?.payload?.success) {
+            if (response?.payload?.success) {
                 setIsOtpSent(true);
                 setCooldown(60);
+            } else if (response?.error) {
+                const code = response?.error?.code;
+                if (code === 'ACCOUNT_LOCKED' || code === 'RATE_LIMIT_EXCEEDED') {
+                    setLockoutMessage(getErrorMessage(code));
+                }
             }
         }
     }
@@ -118,7 +133,14 @@ function Login() {
         <HomeLayout>
             <div className='flex items-center justify-center min-h-screen bg-gray-900 pt-16 pb-10 px-4'>
                 <div className='w-full max-w-md bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/20 transition-all duration-300'>
-                    
+
+                    {/* Lockout / Rate-limit banner */}
+                    {lockoutMessage && (
+                        <div className="mb-4 p-4 bg-red-900/40 border border-red-500/40 rounded-xl text-red-300 text-sm font-medium">
+                            🔒 {lockoutMessage}
+                        </div>
+                    )}
+
                     {!isOtpSent ? (
                         <div className='flex flex-col gap-6 text-white'>
                             <div className="text-center">

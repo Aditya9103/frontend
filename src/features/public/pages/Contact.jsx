@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 
-import publicService from "../../../core/services/public.service";
 import { isEmail } from "../../../core/config/regexMatcher";
+import publicService from "../../../core/services/public.service";
 import HomeLayout from "../../../shared/layouts/HomeLayout";
 
 function Contact() {

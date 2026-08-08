@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { toast } from "react-hot-toast";
+import { BsPersonCircle } from "react-icons/bs";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-import { BsPersonCircle } from "react-icons/bs";
+
 import { superAdminSignup } from "../../auth/redux/AuthSlice";
 
 const SuperAdminSignup = () => {

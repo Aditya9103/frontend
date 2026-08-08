@@ -1,12 +1,11 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo,useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import HomeLayout from "../../../shared/layouts/HomeLayout";
-import { getAllCourses } from "../redux/CourseSlice";
-
+import CourseGrid from "../components/CourseGrid";
 import CourseHero from "../components/CourseHero";
 import CourseSidebarFilter from "../components/CourseSidebarFilter";
-import CourseGrid from "../components/CourseGrid";
+import { getAllCourses } from "../redux/CourseSlice";
 
 function CourseList() {
     const dispatch = useDispatch();

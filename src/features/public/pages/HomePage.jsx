@@ -1,13 +1,13 @@
-import { motion } from "framer-motion";
-import { ArrowRight, BookOpen, Globe, Laptop, Award, Star, Users } from "lucide-react";
-import { Link } from "react-router-dom";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Pagination, EffectFade } from "swiper/modules";
-
 // Import Swiper styles
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/effect-fade";
+
+import { motion } from "framer-motion";
+import { ArrowRight, Award, BookOpen, Globe, Laptop, Star, Users } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Autoplay, EffectFade,Pagination } from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
 
 import HomePageImage from "../../../shared/assets/homePageMainImage.png";
 import HomeLayout from "../../../shared/layouts/HomeLayout";

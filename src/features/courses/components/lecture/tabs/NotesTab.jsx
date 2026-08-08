@@ -1,5 +1,5 @@
+import { Clock,FileText, Send, Trash2 } from 'lucide-react';
 import React from 'react';
-import { FileText, Send, Trash2, Clock } from 'lucide-react';
 
 const NotesTab = ({
     notes,

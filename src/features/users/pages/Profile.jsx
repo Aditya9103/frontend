@@ -1,15 +1,15 @@
 import { motion } from "framer-motion";
 import {
-    User,
-    Mail,
-    ShieldCheck,
-    CreditCard,
-    LayoutDashboard,
-    Key,
-    Settings,
-    LogOut,
-    Flame,
     CheckCircle,
+    CreditCard,
+    Flame,
+    Key,
+    LayoutDashboard,
+    LogOut,
+    Mail,
+    Settings,
+    ShieldCheck,
+    User,
     UserCircle
 } from "lucide-react";
 import toast from "react-hot-toast";

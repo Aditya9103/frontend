@@ -1,10 +1,11 @@
-import { useState, useRef, useEffect } from 'react';
+import { useEffect,useRef, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 
 import HomeLayout from '../../../shared/layouts/HomeLayout';
-import { adminSendLoginOtp, adminVerifyLoginOtp, adminPasswordLogin, resendOtp } from '../../auth/redux/AuthSlice';
+import { getErrorMessage } from '../../../shared/utils/apiError';
+import { adminPasswordLogin, adminSendLoginOtp, adminVerifyLoginOtp, resendOtp } from '../../auth/redux/AuthSlice';
 
 function AdminLogin() {
     const dispatch = useDispatch();
@@ -17,7 +18,8 @@ function AdminLogin() {
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const [cooldown, setCooldown] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    
+    const [lockoutMessage, setLockoutMessage] = useState('');
+
     const otpRefs = useRef([]);
 
     useEffect(() => {
@@ -35,7 +37,8 @@ function AdminLogin() {
 
     async function handleLoginSubmit(event) {
         event.preventDefault();
-        
+        setLockoutMessage('');
+
         if (!loginData.email) {
             toast.error("Please enter your email");
             return;
@@ -49,16 +52,26 @@ function AdminLogin() {
             setIsSubmitting(true);
             const response = await dispatch(adminPasswordLogin({ email: loginData.email, password: loginData.password }));
             setIsSubmitting(false);
-            if(response?.payload?.success) {
+            if (response?.payload?.success) {
                 navigate("/dashboard");
+            } else if (response?.error) {
+                const code = response?.error?.code;
+                if (code === 'ACCOUNT_LOCKED' || code === 'RATE_LIMIT_EXCEEDED') {
+                    setLockoutMessage(getErrorMessage(code));
+                }
             }
         } else {
             setIsSubmitting(true);
             const response = await dispatch(adminSendLoginOtp({ email: loginData.email }));
             setIsSubmitting(false);
-            if(response?.payload?.success) {
+            if (response?.payload?.success) {
                 setIsOtpSent(true);
                 setCooldown(60);
+            } else if (response?.error) {
+                const code = response?.error?.code;
+                if (code === 'ACCOUNT_LOCKED' || code === 'RATE_LIMIT_EXCEEDED') {
+                    setLockoutMessage(getErrorMessage(code));
+                }
             }
         }
     }
@@ -113,7 +126,14 @@ function AdminLogin() {
         <HomeLayout>
             <div className='flex items-center justify-center min-h-screen bg-gray-900 pt-16 pb-10 px-4'>
                 <div className='w-full max-w-md bg-rose-900/10 backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-rose-500/20 transition-all duration-300'>
-                    
+
+                    {/* Lockout / Rate-limit banner */}
+                    {lockoutMessage && (
+                        <div className="mb-4 p-4 bg-red-900/40 border border-red-500/40 rounded-xl text-red-300 text-sm font-medium">
+                            🔒 {lockoutMessage}
+                        </div>
+                    )}
+
                     {!isOtpSent ? (
                         <div className='flex flex-col gap-6 text-white'>
                             <div className="text-center">

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import SuperAdminSidebar from '../components/SuperAdminSidebar';
-import superAdminService from '../../../core/services/superAdmin.service';
 import toast from 'react-hot-toast';
+
+import superAdminService from '../../../core/services/superAdmin.service';
+import SuperAdminSidebar from '../components/SuperAdminSidebar';
 
 const SuperAdminDashboard = () => {
   const [stats, setStats] = useState({

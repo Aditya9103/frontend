@@ -1,8 +1,9 @@
-import React from "react";
-import { FiHome, FiBookOpen, FiPlusSquare, FiLogOut, FiArrowLeft } from "react-icons/fi";
 import { BookOpen } from "lucide-react";
+import React from "react";
+import { FiArrowLeft,FiBookOpen, FiHome, FiLogOut, FiPlusSquare } from "react-icons/fi";
 import { useDispatch } from "react-redux";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useLocation,useNavigate } from "react-router-dom";
+
 import { logout } from "../../auth/redux/AuthSlice";
 
 const AdminSidebar = () => {

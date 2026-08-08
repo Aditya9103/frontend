@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
-import HomeLayout from "../../../shared/layouts/HomeLayout";
-import { User, BookOpen, Star } from "lucide-react";
+import { BookOpen, Star,User } from "lucide-react";
 import { FaLinkedin, FaTwitter } from "react-icons/fa";
+
+import HomeLayout from "../../../shared/layouts/HomeLayout";
 
 function Mentors() {
     const mentors = [

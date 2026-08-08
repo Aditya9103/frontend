@@ -1,7 +1,7 @@
 import aboutMainImage from "../../../shared/assets/aboutMainImage.png";
 import CarouselSlide from "../../../shared/components/CarouselSlide";
-import { celebrities } from "../../../shared/utils/CelebrityData";
 import HomeLayout from "../../../shared/layouts/HomeLayout";
+import { celebrities } from "../../../shared/utils/CelebrityData";
 
 function AboutUs() {
 

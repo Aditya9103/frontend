@@ -1,6 +1,7 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence,motion } from 'framer-motion';
 import { Filter } from 'lucide-react';
+import React from 'react';
+
 import CourseCard from '../../../shared/components/CourseCard';
 import { CourseCardSkeleton } from '../../../shared/components/Skeleton';
 

@@ -1,12 +1,13 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
 import { 
-  FiHome, FiUsers, FiShield, FiActivity, FiSettings, 
-  FiMonitor, FiLogOut 
-} from 'react-icons/fi';
+FiActivity,   FiHome, FiLogOut, 
+  FiMonitor, FiSettings, 
+FiShield, FiUsers} from 'react-icons/fi';
 import { useDispatch } from 'react-redux';
-import { logout } from '../../auth/redux/AuthSlice';
+import { Link, useLocation } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
+
+import { logout } from '../../auth/redux/AuthSlice';
 
 const SuperAdminSidebar = () => {
   const location = useLocation();

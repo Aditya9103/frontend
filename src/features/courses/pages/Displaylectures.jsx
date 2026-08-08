@@ -1,26 +1,26 @@
-import { useRef, useEffect, useState } from "react";
+import "jspdf-autotable";
+
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
+import { useEffect, useRef, useState } from "react";
+import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
-import { jsPDF } from "jspdf";
-import "jspdf-autotable";
-import html2canvas from "html2canvas";
 
-import HomeLayout from "../../../shared/layouts/HomeLayout";
-import { deleteCourseLecture, getCourseLectures } from "../redux/LectureSlice";
-import { updateCourseProgress, submitQuiz, submitAssignment } from "../../auth/redux/AuthSlice";
-import interactionService from "../../../core/services/interaction.service";
-import discussionService from "../../../core/services/discussion.service";
 import authService from "../../../core/services/auth.service";
-
+import discussionService from "../../../core/services/discussion.service";
+import interactionService from "../../../core/services/interaction.service";
+import HomeLayout from "../../../shared/layouts/HomeLayout";
+import { submitAssignment,submitQuiz, updateCourseProgress } from "../../auth/redux/AuthSlice";
 import LectureHeader from "../components/lecture/LectureHeader";
-import LectureVideoPlayer from "../components/lecture/LectureVideoPlayer";
 import LectureTabsNav from "../components/lecture/LectureTabsNav";
-import PlaylistTab from "../components/lecture/tabs/PlaylistTab";
-import TasksTab from "../components/lecture/tabs/TasksTab";
-import NotesTab from "../components/lecture/tabs/NotesTab";
-import QaTab from "../components/lecture/tabs/QaTab";
+import LectureVideoPlayer from "../components/lecture/LectureVideoPlayer";
 import BookmarksTab from "../components/lecture/tabs/BookmarksTab";
+import NotesTab from "../components/lecture/tabs/NotesTab";
+import PlaylistTab from "../components/lecture/tabs/PlaylistTab";
+import QaTab from "../components/lecture/tabs/QaTab";
+import TasksTab from "../components/lecture/tabs/TasksTab";
+import { deleteCourseLecture, getCourseLectures } from "../redux/LectureSlice";
 
 function Displaylectures() {
     const navigate = useNavigate();

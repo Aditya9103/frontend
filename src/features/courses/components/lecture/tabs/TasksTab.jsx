@@ -1,6 +1,6 @@
+import { AnimatePresence,motion } from 'framer-motion';
+import { CheckCircle, FileText, HelpCircle, XCircle } from 'lucide-react';
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, HelpCircle, FileText, XCircle } from 'lucide-react';
 
 const TasksTab = ({
     state,

@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
+import { ArrowLeft, Camera, Save,User } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { ArrowLeft, Camera, User, Save } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 

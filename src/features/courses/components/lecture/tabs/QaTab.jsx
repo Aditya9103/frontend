@@ -1,5 +1,5 @@
+import { Clock,MessageSquare, Send, User as UserIcon } from 'lucide-react';
 import React from 'react';
-import { MessageSquare, Send, User as UserIcon, Clock } from 'lucide-react';
 
 const QaTab = ({
     discussions,

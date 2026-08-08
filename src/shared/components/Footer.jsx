@@ -1,5 +1,5 @@
-import { BsFacebook, BsInstagram, BsLinkedin, BsTwitter, BsGithub } from 'react-icons/bs';
 import { BookOpen, Mail, MapPin, Phone } from 'lucide-react';
+import { BsFacebook, BsGithub,BsInstagram, BsLinkedin, BsTwitter } from 'react-icons/bs';
 import { Link } from 'react-router-dom';
 
 function Footer() {

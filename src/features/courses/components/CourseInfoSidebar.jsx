@@ -1,6 +1,6 @@
-import React from 'react';
 import { motion } from 'framer-motion';
-import { PlayCircle, ShieldCheck, Edit3 } from 'lucide-react';
+import { Edit3,PlayCircle, ShieldCheck } from 'lucide-react';
+import React from 'react';
 
 const CourseInfoSidebar = ({ state, role, isSubscribed, navigate }) => {
     return (

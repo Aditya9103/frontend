@@ -1,59 +1,150 @@
-import axios from "axios";
-import { toast } from "react-hot-toast";
+/**
+ * axiosInstance.js — Global Axios configuration
+ *
+ * Auth transport:
+ *   - Access token: in-memory via tokenStore.js, sent as Authorization: Bearer header
+ *   - Refresh token: httpOnly Secure cookie (no JS access)
+ *
+ * On 401: silently calls POST /auth/refresh, updates the token store,
+ * retries the original request. Concurrent 401s queue against the single
+ * in-flight refresh promise — only one refresh call is ever made at a time.
+ *
+ * Error shape: every rejected error has `err.code` attached from the backend
+ * envelope's `error.code` field, so callers can branch on machine-readable
+ * codes (e.g. 'ACCOUNT_LOCKED', 'RATE_LIMIT_EXCEEDED') instead of parsing
+ * human-readable message strings.
+ *
+ * Envelope note: this interceptor does NOT unwrap the response envelope.
+ * Services return the raw Axios response (`res`); thunks/callers read
+ * `res.data.data` for the payload. This keeps services transparent and
+ * makes the envelope shape explicit at the Redux slice boundary.
+ */
+import axios from 'axios';
+import { toast } from 'react-hot-toast';
 
-// STEP 1: Smart Environment Detection
-// We check if the website is running on your local computer ('localhost') or on the internet.
-const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+import { clearAccessToken,getAccessToken, setAccessToken } from './tokenStore';
 
-// STEP 2: Setting the API Address
-// If we are local, we talk to our local server (port 5001). 
-// If we are on the internet, we talk to the production server on Render.
-const BASE_URL = isLocal 
-    ? "http://localhost:5001/api/v1" 
-    : (import.meta.env.VITE_API_BASE_URL || "https://learnify-backendrender.onrender.com/api/v1");
+// ── Base URL ──────────────────────────────────────────────────────────────────
+const isLocal =
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1';
 
-// STEP 3: Creating the 'Connection Bridge' (Axios Instance)
+const BASE_URL = isLocal
+  ? 'http://localhost:5001/api/v1'
+  : import.meta.env.VITE_API_BASE_URL || 'https://learnify-backendrender.onrender.com/api/v1';
+
+// ── Axios Instance ────────────────────────────────────────────────────────────
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
-  withCredentials: true, // This allows us to send 'cookies' for staying logged in
-  timeout: 40000,        // We wait up to 40 seconds for a response before giving up
+  withCredentials: true, // Required for the httpOnly refresh token cookie
+  timeout: 40000,
 });
 
-// STEP 4: Global 'Safety Net' (Interceptors)
-// This code watches every single piece of data coming back from the server.
-axiosInstance.interceptors.response.use(
-    (response) => response, // If everything is fine, just pass the data through
-    (error) => {
-        const { response } = error;
-
-        // If there is no response at all (Server is dead or No Internet)
-        if (!response) {
-            toast.error("Network issue. Please check your internet connection.");
-            return Promise.reject(error);
-        }
-
-        const status = response.status;
-
-        // Case: Session Expired (Error 401)
-        // If the server says "I don't know who you are anymore", we send you to the login page.
-        if (status === 401) {
-            if (!window.location.pathname.includes('/login')) {
-                toast.error("Session expired. Please log in again.");
-                localStorage.clear(); // Clear all saved user data
-                window.location.href = '/login';
-            }
-        } 
-        // Case: No Permission (Error 403)
-        else if (status === 403) {
-            toast.error("Access denied. You don't have permission for this.");
-        } 
-        // Case: Server Crash (Error 500+)
-        else if (status >= 500) {
-            toast.error("The server hit a snag. Our team is looking into it.");
-        }
-
-        return Promise.reject(error);
+// ── Request interceptor: attach Bearer token ─────────────────────────────────
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = getAccessToken();
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
     }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// ── Response interceptor: handle 401 → refresh → retry ───────────────────────
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(({ resolve, reject }) =>
+    error ? reject(error) : resolve(token)
+  );
+  failedQueue = [];
+};
+
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    const { response } = error;
+
+    if (!response) {
+      toast.error('Network issue. Please check your internet connection.');
+      return Promise.reject(error);
+    }
+
+    const { status, data } = response;
+
+    // ── Attach machine-readable code to every error ───────────────────────────
+    // Callers branch on err.code (e.g. 'ACCOUNT_LOCKED') — not message strings.
+    const errorCode = data?.error?.code;
+    if (errorCode) error.code = errorCode;
+
+    // ── 401: Access token expired → attempt silent refresh ───────────────────
+    if (status === 401 && !originalRequest._retry) {
+      // Never retry the refresh endpoint itself
+      if (originalRequest.url?.includes('/auth/refresh')) {
+        clearAccessToken();
+        if (!window.location.pathname.includes('/login')) {
+          toast.error('Your session expired. Please log in again.');
+          window.location.href = '/login';
+        }
+        return Promise.reject(error);
+      }
+
+      if (isRefreshing) {
+        // Queue request until the in-flight refresh resolves
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers['Authorization'] = `Bearer ${token}`;
+            return axiosInstance(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        const refreshResponse = await axiosInstance.post('/auth/refresh');
+        const newToken = refreshResponse.data?.data?.accessToken;
+        setAccessToken(newToken); // notifies tokenStore listeners (e.g. socket.js)
+        processQueue(null, newToken);
+        originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+        return axiosInstance(originalRequest);
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        clearAccessToken();
+        if (!window.location.pathname.includes('/login')) {
+          toast.error('Your session expired. Please log in again.');
+          window.location.href = '/login';
+        }
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    // ── 403: Forbidden ────────────────────────────────────────────────────────
+    if (status === 403) {
+      toast.error("You don't have permission to do that.");
+    }
+
+    // ── 429: Rate limited ─────────────────────────────────────────────────────
+    if (status === 429) {
+      toast.error(data?.error?.message || 'Too many requests. Please slow down.');
+    }
+
+    // ── 5xx: Server error ─────────────────────────────────────────────────────
+    if (status >= 500) {
+      toast.error('Something went wrong on our end. Please try again shortly.');
+    }
+
+    return Promise.reject(error);
+  }
 );
 
 export default axiosInstance;

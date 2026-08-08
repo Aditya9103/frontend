@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Calendar, User, Clock, Share2, ArrowLeft, MessageSquare } from "lucide-react";
-import { FaFacebook, FaTwitter, FaLinkedin } from "react-icons/fa";
+import { ArrowLeft, Calendar, Clock, MessageSquare,Share2, User } from "lucide-react";
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import { FaFacebook, FaLinkedin,FaTwitter } from "react-icons/fa";
+import { useNavigate,useParams } from "react-router-dom";
+
 import blogService from "../../../core/services/blog.service";
 import HomeLayout from "../../../shared/layouts/HomeLayout";
-import toast from "react-hot-toast";
 
 function BlogDetails() {
     const { id } = useParams();

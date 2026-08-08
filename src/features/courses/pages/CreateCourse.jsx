@@ -3,6 +3,7 @@ import toast from "react-hot-toast";
 import { AiOutlineArrowLeft } from "react-icons/ai";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
+
 import { createNewCourse } from "../redux/CourseSlice";
 
 function CreateCourse() {

@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
+import { Building2, MapPin,Quote, TrendingUp } from "lucide-react";
+
 import HomeLayout from "../../../shared/layouts/HomeLayout";
-import { Quote, TrendingUp, Building2, MapPin } from "lucide-react";
 
 function SuccessStories() {
     const stories = [

@@ -1,5 +1,5 @@
+import { Award, BookOpen,ShieldCheck } from 'lucide-react';
 import { forwardRef } from 'react';
-import { Award, ShieldCheck, BookOpen } from 'lucide-react';
 
 const Certificate = forwardRef(({ studentName, courseName, date }, ref) => {
     return (

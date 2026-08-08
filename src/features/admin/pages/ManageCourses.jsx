@@ -1,8 +1,9 @@
 import React, { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import { BsCollectionPlayFill, BsTrash } from "react-icons/bs";
 import { FiBookOpen } from "react-icons/fi";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+
 import { deleteCourse, getAllCourses } from "../../courses/redux/CourseSlice";
 
 function ManageCourses() {

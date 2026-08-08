@@ -1,6 +1,6 @@
+import { AnimatePresence,motion } from 'framer-motion';
+import { Bookmark, HelpCircle, Subtitles,Video } from 'lucide-react';
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Video, HelpCircle, Bookmark, Subtitles } from 'lucide-react';
 
 const LectureVideoPlayer = ({
     lectures,
