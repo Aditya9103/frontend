@@ -98,9 +98,14 @@ function Footer() {
                                 </ul>
                             </div>
                             <div className="flex flex-wrap gap-3 pt-2">
-                                {[<BsFacebook size={16} />, <BsTwitter size={16} />, <BsInstagram size={16} />, <BsGithub size={16} />].map((icon, i) => (
-                                    <a key={i} href="#" className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-gray-900 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-yellow-500 hover:text-white transition-all shadow-sm">
-                                        {icon}
+                                {[
+                                    { icon: <BsFacebook size={16} />, key: 'fb' },
+                                    { icon: <BsTwitter size={16} />, key: 'tw' },
+                                    { icon: <BsInstagram size={16} />, key: 'ig' },
+                                    { icon: <BsGithub size={16} />, key: 'gh' }
+                                ].map((item) => (
+                                    <a key={item.key} href="#" className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-gray-900 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-yellow-500 hover:text-white transition-all shadow-sm">
+                                        {item.icon}
                                     </a>
                                 ))}
                             </div>

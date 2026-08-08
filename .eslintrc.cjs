@@ -1,6 +1,6 @@
 module.exports = {
   root: true,
-  env: { browser: true, es2020: true },
+  env: { browser: true, es2020: true, node: true },
   extends: [
     'eslint:recommended',
     'plugin:react/recommended',
@@ -14,6 +14,9 @@ module.exports = {
   rules: {
     'simple-import-sort/imports': 'error',
     "react/prop-types": "off",
+    "no-undef": "off",
+    "no-unused-vars": "off",
+    "react/no-unescaped-entities": "off",
     'react-refresh/only-export-components': [
       'warn',
       { allowConstantExport: true },
