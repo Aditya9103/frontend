@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 import { useEffect, useMemo,useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -14,6 +15,15 @@ function CourseList() {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("All");
     const [sortBy, setSortBy] = useState("newest");
+    // Phase 8: cache notice — dismiss once per session
+    const [showCacheNotice, setShowCacheNotice] = useState(
+        !sessionStorage.getItem('catalog_notice_dismissed')
+    );
+
+    const dismissCacheNotice = () => {
+        sessionStorage.setItem('catalog_notice_dismissed', '1');
+        setShowCacheNotice(false);
+    };
 
     useEffect(() => {
         dispatch(getAllCourses());
@@ -69,6 +79,16 @@ function CourseList() {
                             sortBy={sortBy}
                             setSortBy={setSortBy}
                         />
+
+                        {/* Phase 8: Stale cache notice */}
+                        {showCacheNotice && (
+                            <div className="flex items-center justify-between gap-3 px-4 py-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs text-amber-300">
+                                <span>⏱ Newly published courses may take up to 5 minutes to appear due to catalog caching.</span>
+                                <button onClick={dismissCacheNotice} className="flex-shrink-0 text-amber-400 hover:text-amber-200 transition-colors">
+                                    <X size={14} />
+                                </button>
+                            </div>
+                        )}
 
                         <div className="flex-1 w-full">
                             <CourseGrid 

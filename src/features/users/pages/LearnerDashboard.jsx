@@ -16,6 +16,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 import HomeLayout from "../../../shared/layouts/HomeLayout";
+import CertificateCard from "../../../shared/components/CertificateCard";
 import { getLearnerDashboardData } from "../../superAdmin/redux/DashboardSlice";
 
 const ProgressRing = ({ percentage, color = "yellow" }) => {
@@ -329,6 +330,29 @@ const LearnerDashboard = () => {
                                     )}
                                 </div>
                             </section>
+
+                            {/* Phase 5: Certificates */}
+                            {userData?.progress?.filter((p) => p.completed)?.length > 0 && (
+                                <section className="space-y-4">
+                                    <h2 className="text-xl font-black font-outfit text-gray-900 dark:text-white flex items-center gap-3">
+                                        <Trophy size={20} className="text-amber-500" /> Your Certificates
+                                    </h2>
+                                    <div className="space-y-3">
+                                        {userData.progress
+                                            .filter((p) => p.completed)
+                                            .map((p) => (
+                                                <CertificateCard
+                                                    key={p.courseId}
+                                                    userId={userData._id}
+                                                    courseId={p.courseId}
+                                                    courseTitle={p.courseTitle || `Course ${p.courseId?.slice(-6)}`}
+                                                    date={p.completedAt}
+                                                />
+                                            ))
+                                        }
+                                    </div>
+                                </section>
+                            )}
                         </div>
                     </div>
                 </div>

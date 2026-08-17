@@ -15,6 +15,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { toast } from "react-hot-toast";
 
 import { clearAccessToken,setAccessToken } from "../../../core/config/tokenStore";
+import { destroySocket, initSocket } from "../../../core/config/socket";
 import authService from "../../../core/services/auth.service";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -62,6 +63,9 @@ const handleAuthSuccess = (state, action) => {
   state.role = user?.role || "";
   state.permissions = user?.permissions || [];
   state.authCheckComplete = true;
+
+  // Phase 6: connect Socket.IO after every successful auth
+  initSocket();
 };
 
 // ================= SIGNUP =================
@@ -309,6 +313,7 @@ const authSlice = createSlice({
 
       .addCase(logout.fulfilled, (state) => {
         clearAccessToken();
+        destroySocket(); // Phase 6: disconnect socket on logout
         localStorage.removeItem("data");
         localStorage.removeItem("isLoggedIn");
         localStorage.removeItem("role");

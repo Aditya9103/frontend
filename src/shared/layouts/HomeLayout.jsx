@@ -4,7 +4,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link, useLocation,useNavigate } from 'react-router-dom';
 
 import { logout } from '../../features/auth/redux/AuthSlice';
+import NotificationBell from '../../features/notifications/components/NotificationBell';
+import NotificationToast from '../../features/notifications/components/NotificationToast';
 import Footer from '../components/Footer';
+
 
 function HomeLayout({ children }) {
     const dispatch = useDispatch();
@@ -147,7 +150,7 @@ function HomeLayout({ children }) {
                                 </Link>
                             </>
                         ) : (
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-3">
                                 {/* Streak Counter */}
                                 {streakCount > 0 && (
                                     <div 
@@ -158,6 +161,9 @@ function HomeLayout({ children }) {
                                         <span className="text-sm font-black text-orange-500">{streakCount}</span>
                                     </div>
                                 )}
+
+                                {/* Phase 6: Notification Bell */}
+                                <NotificationBell />
                                 
                                 <Link to="/user/profile" className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 flex items-center justify-center text-yellow-500 hover:border-yellow-500 transition-all">
                                     <User size={20} />
@@ -166,6 +172,7 @@ function HomeLayout({ children }) {
                                     <LogOut size={22} />
                                 </button>
                             </div>
+
                         )}
                     </div>
 
@@ -214,6 +221,9 @@ function HomeLayout({ children }) {
             </main>
 
             <Footer />
+
+            {/* Phase 6: Real-time notification toasts */}
+            {isLoggedIn && <NotificationToast />}
         </div>
     );
 }

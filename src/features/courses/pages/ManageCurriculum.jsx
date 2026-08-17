@@ -1,5 +1,5 @@
 import axios from "axios";
-import { BookOpen, FileText, HelpCircle, Plus, Video,X } from "lucide-react";
+import { BookOpen, CheckCircle, Eye, FileText, HelpCircle, Loader2, Plus, Radio, Video, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
@@ -45,10 +45,33 @@ export default function ManageCurriculum() {
     const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
     const [assignmentScores, setAssignmentScores] = useState({});
 
+    // Phase 5 — Publish/Draft state
+    const [courseStatus, setCourseStatus] = useState(state?.status || 'draft');
+    const [isPublishing, setIsPublishing] = useState(false);
+
     if (!state) {
         navigate("/courses");
         return null;
     }
+
+    const handlePublish = async () => {
+        if (courseStatus === 'published') {
+            toast('This course is already published. Edit carefully — students may be enrolled.', { icon: '⚠️' });
+            return;
+        }
+        setIsPublishing(true);
+        try {
+            const res = await axiosInstance.post(`/courses/${state._id}/publish`);
+            if (res.data?.success) {
+                setCourseStatus('published');
+                toast.success('Course published! Students can now enroll.');
+            }
+        } catch (err) {
+            toast.error(err?.response?.data?.error?.message || 'Failed to publish course');
+        } finally {
+            setIsPublishing(false);
+        }
+    };
 
     const handleAddSection = async () => {
         if (!sectionTitle) return toast.error("Title required");
@@ -176,18 +199,49 @@ export default function ManageCurriculum() {
     return (
         <div className="font-inter text-gray-800 dark:text-gray-200">
             <div className="max-w-4xl mx-auto space-y-8">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-wrap justify-between items-start gap-4">
                     <div>
-                        <h1 className="text-3xl font-black font-outfit text-gray-900 dark:text-white">Manage Curriculum</h1>
+                        <div className="flex items-center gap-3 mb-1">
+                            <h1 className="text-3xl font-black font-outfit text-gray-900 dark:text-white">Manage Curriculum</h1>
+                            {/* Phase 5: Status badge */}
+                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
+                                courseStatus === 'published'
+                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                                    : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                            }`}>
+                                {courseStatus === 'published'
+                                    ? <><CheckCircle size={12} /> Published</>
+                                    : <><Radio size={12} /> Draft</>
+                                }
+                            </span>
+                        </div>
                         <p className="text-sm text-gray-500">Course: {state.title}</p>
+                        {courseStatus === 'published' && (
+                            <p className="text-xs text-amber-400 flex items-center gap-1 mt-1">
+                                <Eye size={11} /> Students are enrolled — changes take effect immediately
+                            </p>
+                        )}
                     </div>
-                    <div className="flex gap-4">
-                        <button onClick={handleViewSubmissions} className="px-6 py-3 bg-blue-500 text-white rounded-xl font-bold hover:scale-105 transition-all">
+                    <div className="flex flex-wrap gap-3">
+                        <button onClick={handleViewSubmissions} className="px-5 py-2.5 bg-blue-500 text-white rounded-xl font-bold hover:scale-105 transition-all text-sm">
                             View Submissions
                         </button>
-                        <button onClick={() => setShowSectionModal(true)} className="px-6 py-3 bg-yellow-500 text-white rounded-xl font-bold hover:scale-105 transition-all">
+                        <button onClick={() => setShowSectionModal(true)} className="px-5 py-2.5 bg-yellow-500 text-white rounded-xl font-bold hover:scale-105 transition-all text-sm">
                             + Add Section
                         </button>
+                        {/* Phase 5: Publish button */}
+                        {courseStatus !== 'published' && (
+                            <button
+                                onClick={handlePublish}
+                                disabled={isPublishing}
+                                className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl font-bold transition-all text-sm disabled:opacity-60 flex items-center gap-2"
+                            >
+                                {isPublishing
+                                    ? <><Loader2 size={14} className="animate-spin" /> Publishing…</>
+                                    : <><CheckCircle size={14} /> Publish Course</>
+                                }
+                            </button>
+                        )}
                     </div>
                 </div>
 

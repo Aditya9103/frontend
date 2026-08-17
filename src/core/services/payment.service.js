@@ -1,24 +1,34 @@
+/**
+ * payment.service.js — Phase 7 hardened payment API calls.
+ * Phase 7.2: verifyUserPayment sends idempotency key as header.
+ */
 import axiosInstance from '../config/axiosInstance';
 
 class PaymentService {
-  async getRazorpayKey() {
-    return await axiosInstance.get('/payments/razorpay-key');
+  getRazorpayKey() {
+    return axiosInstance.get('/payments/razorpay-key');
   }
 
-  async purchaseCourseBundle() {
-    return await axiosInstance.post('/payments/subscribe');
+  purchaseCourseBundle() {
+    return axiosInstance.post('/payments/subscribe');
   }
 
-  async verifyUserPayment(paymentData) {
-    return await axiosInstance.post('/payments/verify', paymentData);
+  /**
+   * Phase 7.2: accepts an idempotency key and sends it as `Idempotency-Key` header.
+   * The backend will de-duplicate retries using this key.
+   */
+  verifyUserPayment(paymentData, idempotencyKey = null) {
+    const headers = {};
+    if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
+    return axiosInstance.post('/payments/verify', paymentData, { headers });
   }
 
-  async getPaymentRecord() {
-    return await axiosInstance.get('/payments?count=100');
+  getPaymentRecord() {
+    return axiosInstance.get('/payments?count=100');
   }
 
-  async cancelCourseBundle() {
-    return await axiosInstance.post('/payments/unsubscribe');
+  cancelCourseBundle() {
+    return axiosInstance.post('/payments/unsubscribe');
   }
 }
 
