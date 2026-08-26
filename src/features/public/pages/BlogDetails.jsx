@@ -9,7 +9,7 @@ import blogService from "../../../core/services/blog.service";
 import HomeLayout from "../../../shared/layouts/HomeLayout";
 
 function BlogDetails() {
-    const { id } = useParams();
+    const { id: slugOrId } = useParams(); // Phase 9: accepts slug OR _id
     const navigate = useNavigate();
     const [blog, setBlog] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -34,9 +34,21 @@ function BlogDetails() {
     // LOGIC: Fetching the Article
     const fetchBlog = async () => {
         try {
-            const res = await blogService.getBlogDetails(id);
-            setBlog(res.data.blog); // Load the article data into the page
-        } catch (error) {
+            const res = await blogService.getBlogDetails(slugOrId);
+            const data = res.data.blog;
+            setBlog(data);
+            // Phase 9: native SEO — update document title + meta description
+            if (data) {
+                document.title = `${data.metaTitle || data.title} — Learnify Insights`;
+                let metaDesc = document.querySelector('meta[name="description"]');
+                if (!metaDesc) {
+                    metaDesc = document.createElement('meta');
+                    metaDesc.name = 'description';
+                    document.head.appendChild(metaDesc);
+                }
+                metaDesc.content = data.metaDescription || data.excerpt || '';
+            }
+        } catch {
             toast.error("Failed to load article");
             navigate("/blog");
         } finally {
@@ -46,8 +58,10 @@ function BlogDetails() {
 
     useEffect(() => {
         fetchBlog();
-        window.scrollTo(0, 0); // Always start at the top of the page for a new article
-    }, [id]);
+        window.scrollTo(0, 0);
+        // Reset title on unmount
+        return () => { document.title = 'Learnify'; };
+    }, [slugOrId]);
 
     if (loading) return (
         <HomeLayout>

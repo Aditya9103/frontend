@@ -17,7 +17,9 @@ function CreateCourse() {
         createdBy: "",
         description: "",
         thumbnail: null,
-        previewImage: ""
+        previewImage: "",
+        completionThreshold: 80, // Phase 5: % needed for certificate
+        isFree: false,           // Phase 5: free preview mode
     });
 
     function handleImageUpload(e) {
@@ -60,7 +62,9 @@ function CreateCourse() {
                 createdBy: "",
                 description: "",
                 thumbnail: null,
-                previewImage: ""
+                previewImage: "",
+                completionThreshold: 80,
+                isFree: false,
             });
             navigate("/admin/dashboard");
         }
@@ -174,6 +178,43 @@ function CreateCourse() {
                         </div>
                     </div>
                 </main>
+
+                {/* Phase 5: Completion threshold + free toggle */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+                    <div className="flex flex-col gap-2">
+                        <label className="text-sm font-bold text-gray-700 dark:text-gray-300">
+                            Completion Threshold for Certificate
+                            <span className="ml-2 text-yellow-500 font-black">{userInput.completionThreshold}%</span>
+                        </label>
+                        <input
+                            type="range" min="50" max="100" step="5"
+                            name="completionThreshold"
+                            value={userInput.completionThreshold}
+                            onChange={handleUserInput}
+                            className="accent-yellow-500"
+                        />
+                        <p className="text-xs text-gray-400">Learners must complete {userInput.completionThreshold}% of lectures to receive a certificate.</p>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                        <label className="text-sm font-bold text-gray-700 dark:text-gray-300">Free Preview Mode</label>
+                        <button
+                            type="button"
+                            onClick={() => setUserInput({ ...userInput, isFree: !userInput.isFree })}
+                            className={`flex items-center gap-3 px-5 py-3 rounded-xl border text-sm font-bold transition-all w-fit ${
+                                userInput.isFree
+                                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                                    : 'bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500'
+                            }`}
+                        >
+                            <div className={`w-10 h-5 rounded-full transition-all relative ${userInput.isFree ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
+                                <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${userInput.isFree ? 'left-5' : 'left-0.5'}`} />
+                            </div>
+                            {userInput.isFree ? 'Free for Everyone' : 'Paid Enrollment'}
+                        </button>
+                        <p className="text-xs text-gray-400">Free courses are accessible without subscription.</p>
+                    </div>
+                </div>
 
                 <button type="submit" className="mt-4 w-full bg-yellow-500 hover:bg-yellow-600 transition-colors duration-300 rounded-xl py-4 font-bold text-lg text-gray-900 shadow-sm cursor-pointer">
                     Create Course

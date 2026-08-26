@@ -2,6 +2,8 @@ import { Eye, EyeOff, Moon, Sun, User } from 'lucide-react';
 import React, { useEffect,useState } from 'react';
 import { Link,Outlet } from 'react-router-dom';
 
+import NotificationBell from '../../features/notifications/components/NotificationBell';
+import NotificationToast from '../../features/notifications/components/NotificationToast';
 import AdminSidebar from '../../features/admin/components/AdminSidebar';
 
 function AdminLayout() {
@@ -78,6 +80,9 @@ function AdminLayout() {
                             </button>
                         </div>
 
+                        {/* Notification Bell — Phase 6 */}
+                        <NotificationBell />
+
                         {/* Profile Icon */}
                         <Link to="/user/profile" className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center text-yellow-500 hover:border-yellow-500 transition-all shadow-sm">
                             <User size={20} />
@@ -90,6 +95,8 @@ function AdminLayout() {
                     <Outlet />
                 </main>
             </div>
+            {/* Global real-time notification toasts — Phase 6 */}
+            <NotificationToast />
         </div>
     );
 }

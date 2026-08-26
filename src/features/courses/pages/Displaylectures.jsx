@@ -437,6 +437,8 @@ function Displaylectures() {
                                     seekToTime={seekToTime}
                                     formatTime={formatTime}
                                     userData={userData}
+                                    courseId={state?._id}
+                                    lectureId={lectures[currentVideo]?._id}
                                 />
                             )}
 
