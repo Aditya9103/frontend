@@ -227,6 +227,7 @@ function Displaylectures() {
     const handleTimeUpdate = async () => {
         if (!videoRef.current) return;
         const currentTime = Math.floor(videoRef.current.currentTime);
+        const duration = videoRef.current.duration || 0;
         const currentLecture = lectures[currentVideo];
         if (currentLecture?.inVideoQuizzes) {
             const quiz = currentLecture.inVideoQuizzes.find(q => Math.floor(q.timestamp) === currentTime);
@@ -238,10 +239,14 @@ function Displaylectures() {
         }
         if (currentTime % 10 === 0 && currentTime !== lastSavedTime.current) {
             lastSavedTime.current = currentTime;
+            // Phase 5: send watchedPercent + lastPositionSeconds for progress tracking
+            const watchedPercent = duration > 0 ? Math.min(100, Math.round((currentTime / duration) * 100)) : 0;
             await authService.updateVideoProgress({
                 courseId: state._id,
                 lectureId: lectures[currentVideo]._id,
-                timestamp: currentTime
+                timestamp: currentTime,
+                lastPositionSeconds: currentTime,  // Phase 5
+                watchedPercent,                     // Phase 5
             });
         }
     };
@@ -292,6 +297,17 @@ function Displaylectures() {
             toast.success("Note deleted");
         } catch (error) {
             toast.error("Failed to delete note");
+        }
+    };
+
+    // Phase 5: bookmark delete — Trash2 in BookmarksTab is now wired
+    const handleDeleteBookmark = async (bookmarkId) => {
+        try {
+            await interactionService.deleteBookmark(bookmarkId);
+            setBookmarks(prev => prev.filter(b => b._id !== bookmarkId));
+            toast.success("Bookmark removed");
+        } catch {
+            toast.error("Failed to remove bookmark");
         }
     };
 
@@ -393,6 +409,7 @@ function Displaylectures() {
                                     lectures={lectures}
                                     currentVideo={currentVideo}
                                     setCurrentVideo={setCurrentVideo}
+                                    courseProgress={userData?.progress?.find(p => p.courseId === state?._id)}
                                 />
                             )}
 
@@ -447,6 +464,7 @@ function Displaylectures() {
                                     bookmarks={bookmarks}
                                     seekToTime={seekToTime}
                                     formatTime={formatTime}
+                                    onDeleteBookmark={handleDeleteBookmark}
                                 />
                             )}
                         </div>
@@ -459,23 +477,52 @@ function Displaylectures() {
                             <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mt-1">Select a module</p>
                         </div>
                         <div className="space-y-4">
-                            {lectures?.map((lecture, index) => (
+                            {lectures?.map((lecture, index) => {
+                                const lProgress = userData?.progress?.find(
+                                    p => p.courseId === state?._id
+                                )?.lectures?.find(l => l.lectureId === lecture._id);
+                                const pct = lProgress?.watchedPercent || 0;
+                                const isCompleted = lProgress?.completed || pct >= 90;
+                                return (
                                 <div
                                     key={lecture._id}
                                     onClick={() => setCurrentVideo(index)}
                                     className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-4 ${currentVideo === index ? 'bg-yellow-500/10 border-yellow-500/50 shadow-[0_0_20px_rgba(234,179,8,0.1)]' : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/20'}`}
                                 >
-                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${currentVideo === index ? 'bg-yellow-500 text-black shadow-lg' : 'bg-black/50 text-gray-500 group-hover:text-white'}`}>
-                                        <div className={currentVideo === index ? 'ml-1' : ''}>
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill={currentVideo === index ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                                    <div className="relative flex-shrink-0">
+                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${currentVideo === index ? 'bg-yellow-500 text-black shadow-lg' : isCompleted ? 'bg-emerald-500/20 text-emerald-400' : 'bg-black/50 text-gray-500'}`}>
+                                            {isCompleted && currentVideo !== index ? (
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                            ) : (
+                                            <div className={currentVideo === index ? 'ml-1' : ''}>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill={currentVideo === index ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                            </div>
+                                            )}
                                         </div>
+                                        {/* Phase 5: progress arc indicator */}
+                                        {pct > 0 && !isCompleted && (
+                                            <div className="absolute -bottom-1 -right-1 w-4 h-4 flex items-center justify-center">
+                                                <svg viewBox="0 0 16 16" className="w-4 h-4 -rotate-90">
+                                                    <circle cx="8" cy="8" r="6" fill="none" stroke="#374151" strokeWidth="2"/>
+                                                    <circle cx="8" cy="8" r="6" fill="none" stroke="#eab308" strokeWidth="2"
+                                                        strokeDasharray={`${(pct / 100) * 37.7} 37.7`}
+                                                        strokeLinecap="round"/>
+                                                </svg>
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1 truncate">{lecture.sectionTitle || `Module ${index + 1}`}</p>
-                                        <h3 className={`font-bold text-sm leading-snug line-clamp-2 ${currentVideo === index ? 'text-yellow-500' : 'text-gray-300'}`}>{lecture.title}</h3>
+                                        <h3 className={`font-bold text-sm leading-snug line-clamp-2 ${currentVideo === index ? 'text-yellow-500' : isCompleted ? 'text-emerald-400' : 'text-gray-300'}`}>{lecture.title}</h3>
+                                        {pct > 0 && !isCompleted && (
+                                            <div className="mt-1.5 h-0.5 w-full bg-white/10 rounded-full overflow-hidden">
+                                                <div className="h-full bg-yellow-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 </div>

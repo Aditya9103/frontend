@@ -20,6 +20,11 @@ class InteractionService {
   async toggleBookmark(data) {
     return await axiosInstance.post('/interaction/bookmark', data);
   }
+
+  // Phase 5: delete a specific bookmark by id
+  async deleteBookmark(bookmarkId) {
+    return await axiosInstance.delete(`/interaction/bookmark/${bookmarkId}`);
+  }
 }
 
 export default new InteractionService();

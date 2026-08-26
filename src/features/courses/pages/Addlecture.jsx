@@ -19,7 +19,8 @@ function AddLecture() {
         lecture: undefined,
         title: "",
         description: "",
-        videoSrc: ""
+        videoSrc: "",
+        dripDelayDays: 0,  // Phase 5: 0 = immediately available after enrollment
     });
 
     function handleInputChange(e) {
@@ -59,7 +60,8 @@ function AddLecture() {
                 lecture: undefined,
                 title: "",
                 description: "",
-                videoSrc: ""
+                videoSrc: "",
+                dripDelayDays: 0,
             })
         }
     }
@@ -132,6 +134,24 @@ function AddLecture() {
                                 <input type="file" className="hidden" id="lecture" name="lecture" onChange={handleVideo} accept="video/mp4 video/x-mp4 video/*" />
                             </div>
                         )}
+                        {/* Phase 5: Drip delay */}
+                        <div className="flex flex-col gap-2">
+                            <label className="text-sm font-bold text-gray-700 dark:text-gray-300" htmlFor="dripDelayDays">
+                                Drip Delay
+                                <span className="ml-2 text-yellow-500 font-black">
+                                    {userInput.dripDelayDays === 0 ? 'Available immediately' : `${userInput.dripDelayDays} day${userInput.dripDelayDays > 1 ? 's' : ''} after enrollment`}
+                                </span>
+                            </label>
+                            <input
+                                type="range" min="0" max="60" step="1"
+                                id="dripDelayDays" name="dripDelayDays"
+                                value={userInput.dripDelayDays}
+                                onChange={handleInputChange}
+                                className="accent-yellow-500"
+                            />
+                            <p className="text-xs text-gray-400">Set to 0 for immediate access. Higher values unlock this lecture after N days from enrollment.</p>
+                        </div>
+
                         <button type="submit" className="mt-4 w-full bg-yellow-500 hover:bg-yellow-600 transition-colors duration-300 rounded-xl py-4 font-bold text-lg text-gray-900 shadow-sm cursor-pointer">
                             Add Lecture
                         </button>
