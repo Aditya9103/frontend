@@ -40,12 +40,17 @@ const axiosInstance = axios.create({
   timeout: 40000,
 });
 
-// ── Request interceptor: attach Bearer token ─────────────────────────────────
+// ── Request interceptor: attach Bearer token & correlation ID ────────────────
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = getAccessToken();
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    if (!config.headers['X-Request-Id']) {
+      config.headers['X-Request-Id'] = typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `fe-${Date.now()}`;
     }
     return config;
   },
@@ -84,7 +89,7 @@ axiosInstance.interceptors.response.use(
     // ── 401: Access token expired → attempt silent refresh ───────────────────
     if (status === 401 && !originalRequest._retry) {
       // Never retry the refresh endpoint itself
-      if (originalRequest.url?.includes('/auth/refresh')) {
+      if (originalRequest.url?.includes('/auth/refresh') || originalRequest.url?.includes('/user/refresh')) {
         clearAccessToken();
         if (!window.location.pathname.includes('/login')) {
           toast.error('Your session expired. Please log in again.');

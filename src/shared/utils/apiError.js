@@ -50,3 +50,39 @@ export const ERROR_MESSAGES = {
  */
 export const getErrorMessage = (code, fallback) =>
   ERROR_MESSAGES[code] ?? fallback ?? 'Something went wrong. Please try again.';
+
+/**
+ * Extracts a concise, actionable error message from an Axios error object
+ * following the backend standard envelope shape: { success: false, error: { code, message, fields, formErrors } }.
+ *
+ * Priority:
+ *  1. formErrors array (Zod root refinements, e.g. "Passwords must match")
+ *  2. fields map (first field validation error message)
+ *  3. Mapped ERROR_MESSAGES[code] (if non-generic)
+ *  4. backend message or original error message
+ *
+ * @param {any} err - Caught Axios or runtime error
+ * @returns {string}
+ */
+export const extractApiError = (err) => {
+  if (!err) return 'Something went wrong. Please try again.';
+  const backendError = err.response?.data?.error;
+  if (backendError) {
+    if (Array.isArray(backendError.formErrors) && backendError.formErrors.length > 0) {
+      return backendError.formErrors[0];
+    }
+    if (backendError.fields && typeof backendError.fields === 'object') {
+      const firstField = Object.values(backendError.fields)[0];
+      if (Array.isArray(firstField) && firstField.length > 0) {
+        return firstField[0];
+      }
+    }
+    if (backendError.code && ERROR_MESSAGES[backendError.code] && backendError.code !== 'VALIDATION_ERROR') {
+      return ERROR_MESSAGES[backendError.code];
+    }
+    if (backendError.message) {
+      return backendError.message;
+    }
+  }
+  return err.message || 'Something went wrong. Please try again.';
+};

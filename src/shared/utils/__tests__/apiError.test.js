@@ -5,7 +5,7 @@
  * Validates that every known error code maps to a non-empty string and
  * that unknown codes fall back to the provided message, then the default.
  */
-import { ERROR_MESSAGES,getErrorMessage } from '../apiError';
+import { ERROR_MESSAGES, extractApiError, getErrorMessage } from '../apiError';
 
 describe('getErrorMessage', () => {
   it('returns the mapped message for a known code', () => {
@@ -35,5 +35,64 @@ describe('getErrorMessage', () => {
       expect(typeof msg).toBe('string');
       expect(msg.length).toBeGreaterThan(0, `ERROR_MESSAGES.${code} is empty`);
     });
+  });
+});
+
+describe('extractApiError (Envelope Extractor)', () => {
+  it('extracts root formErrors from backend validation response', () => {
+    const err = {
+      response: {
+        data: {
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid request data',
+            formErrors: ['Passwords must match'],
+          },
+        },
+      },
+    };
+    expect(extractApiError(err)).toBe('Passwords must match');
+  });
+
+  it('extracts field validation error from fields map', () => {
+    const err = {
+      response: {
+        data: {
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            fields: {
+              email: ['Invalid email format'],
+            },
+          },
+        },
+      },
+    };
+    expect(extractApiError(err)).toBe('Invalid email format');
+  });
+
+  it('maps known error code to user-facing message', () => {
+    const err = {
+      response: {
+        data: {
+          success: false,
+          error: {
+            code: 'ACCOUNT_LOCKED',
+            message: 'Account temporarily locked',
+          },
+        },
+      },
+    };
+    expect(extractApiError(err)).toBe(ERROR_MESSAGES.ACCOUNT_LOCKED);
+  });
+
+  it('falls back to err.message when response has no structured error', () => {
+    const err = new Error('Network timeout');
+    expect(extractApiError(err)).toBe('Network timeout');
+  });
+
+  it('returns safe default message on null/undefined error', () => {
+    expect(extractApiError(null)).toBe('Something went wrong. Please try again.');
   });
 });

@@ -340,6 +340,13 @@ const authSlice = createSlice({
         state.authCheckComplete = true;
       })
 
+      .addCase(updateProfile.fulfilled, (state, action) => {
+        const user = action?.payload?.data?.user;
+        if (!user) return;
+        state.data = { ...state.data, ...user };
+        localStorage.setItem("data", JSON.stringify(state.data));
+      })
+
       .addCase(updateCourseProgress.fulfilled, (state, action) => {
         const progress = action?.payload?.data?.progress;
         if (!progress) return;
