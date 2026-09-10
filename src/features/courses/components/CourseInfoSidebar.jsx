@@ -36,7 +36,7 @@ const CourseInfoSidebar = ({ state, role, isSubscribed, navigate }) => {
                         <div className="h-px bg-gray-700/50 w-full" />
 
                         <div className="space-y-3 pt-2">
-                            {role === "ADMIN" || isSubscribed ? (
+                            {role === "ADMIN" || isSubscribed || Boolean(state?.isFree) ? (
                                 <motion.button 
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
@@ -50,7 +50,7 @@ const CourseInfoSidebar = ({ state, role, isSubscribed, navigate }) => {
                                 <motion.button 
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
-                                    onClick={() => navigate("/checkout")} 
+                                    onClick={() => navigate("/checkout", { state: { course: state } })} 
                                     className="flex items-center justify-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-gray-900 rounded-xl font-bold px-5 py-4 w-full shadow-lg shadow-yellow-500/20"
                                 >
                                     <ShieldCheck size={20} />

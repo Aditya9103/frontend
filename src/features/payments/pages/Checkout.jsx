@@ -23,10 +23,11 @@ import {
 import { useEffect } from "react";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 
 import HomeLayout from "../../../shared/layouts/HomeLayout";
+import { getUserData } from "../../auth/redux/AuthSlice";
 import {
   getRazorPayId,
   PAYMENT_STATUS,
@@ -47,6 +48,7 @@ const FEATURES = [
 export default function Checkout() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const { key: razorpayKey, subscription_id, status, idempotencyKey } = useSelector(
     (s) => s.razorpay
   );
@@ -101,7 +103,8 @@ export default function Checkout() {
           verifyUserPayment({ paymentData, idempotencyKey })
         );
         if (!res.error) {
-          navigate("/checkout/success");
+          await dispatch(getUserData());
+          navigate("/checkout/success", { state: location.state });
         } else {
           navigate("/checkout/fail");
         }

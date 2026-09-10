@@ -1,16 +1,25 @@
-import { useSelector } from "react-redux";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import HomeLayout from "../../../shared/layouts/HomeLayout";
+import { getUserData } from "../../auth/redux/AuthSlice";
 import CourseHeroBanner from "../components/CourseHeroBanner";
 import CourseInfoSidebar from "../components/CourseInfoSidebar";
 
 function CourseDescription() {
     const { state } = useLocation();
     const navigate = useNavigate();
+    const dispatch = useDispatch();
 
-    const { role, data } = useSelector((state) => state.auth);
+    const { role, data, isLoggedIn } = useSelector((state) => state.auth);
     const isSubscribed = data?.subscription?.status === "active";
+
+    useEffect(() => {
+        if (isLoggedIn) {
+            dispatch(getUserData());
+        }
+    }, [dispatch, isLoggedIn]);
 
     return (
         <HomeLayout>

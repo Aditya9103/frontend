@@ -3,6 +3,8 @@ import toast from "react-hot-toast";
 
 import courseService from "../../../core/services/course.service";
 
+import { extractApiError } from "../../../shared/utils/apiError";
+
 const initialState = {
   courseData: [],
 };
@@ -12,7 +14,7 @@ export const getAllCourses = createAsyncThunk("/course/get", async () => {
     const response = await courseService.getAllCourses();
     return response.data?.data?.courses || response.data?.courses || [];
   } catch (error) {
-    toast.error(error?.response?.data?.error?.message || 'Failed to load courses');
+    toast.error(extractApiError(error));
   }
 });
 
@@ -22,26 +24,36 @@ export const deleteCourse = createAsyncThunk("/course/delete", async (id) => {
     toast.success('Course deleted successfully');
     return response.data.data;
   } catch (error) {
-    toast.error(error?.response?.data?.error?.message || 'Failed to delete course');
+    toast.error(extractApiError(error));
   }
 });
 
 export const createNewCourse = createAsyncThunk(
   "/course/create",
-  async (data) => {
+  async (data, { rejectWithValue }) => {
     try {
       let formData = new FormData();
-      formData.append("title", data?.title);
-      formData.append("description", data?.description);
-      formData.append("category", data?.category);
-      formData.append("createdBy", data?.createdBy);
-      formData.append("thumbnail", data?.thumbnail);
+      formData.append("title", data?.title ? data.title.trim() : "");
+      formData.append("description", data?.description ? data.description.trim() : "");
+      formData.append("category", data?.category ? data.category.trim() : "");
+      formData.append("createdBy", data?.createdBy ? data.createdBy.trim() : "");
+      if (data?.thumbnail) {
+        formData.append("thumbnail", data.thumbnail);
+      }
+      if (data?.completionThreshold !== undefined) {
+        formData.append("completionThreshold", data.completionThreshold);
+      }
+      if (data?.isFree !== undefined) {
+        formData.append("isFree", data.isFree);
+      }
 
       const response = await courseService.createNewCourse(formData);
       toast.success('Course created successfully');
-      return response.data.data;
+      return response.data?.data || response.data;
     } catch (error) {
-      toast.error(error?.response?.data?.error?.message || 'Failed to create course');
+      const message = extractApiError(error);
+      toast.error(message);
+      return rejectWithValue(message);
     }
   }
 );

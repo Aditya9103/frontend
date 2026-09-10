@@ -15,7 +15,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { toast } from "react-hot-toast";
 
 import { destroySocket, initSocket } from "../../../core/config/socket";
-import { clearAccessToken,setAccessToken } from "../../../core/config/tokenStore";
+import { clearAccessToken, setAccessToken } from "../../../core/config/tokenStore";
 import authService from "../../../core/services/auth.service";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -297,10 +297,19 @@ const authSlice = createSlice({
       state.permissions = [];
       state.authCheckComplete = true;
     },
+    // Immediately updates subscription status in state and localStorage upon payment confirmation
+    setSubscriptionStatus: (state, action) => {
+      if (!state.data) state.data = {};
+      if (!state.data.subscription) state.data.subscription = {};
+      state.data.subscription.status = action.payload || "active";
+      localStorage.setItem("data", JSON.stringify(state.data));
+    },
   },
   extraReducers: (builder) => {
     builder
-      // All login/verify actions share the same success handler
+      // ─────────────────────────────────────────────────────────────
+      // AUTH SUCCESS
+      // ─────────────────────────────────────────────────────────────
       .addCase(login.fulfilled, handleAuthSuccess)
       .addCase(googleAuth.fulfilled, handleAuthSuccess)
       .addCase(verifySignupOtp.fulfilled, handleAuthSuccess)
@@ -309,15 +318,23 @@ const authSlice = createSlice({
       .addCase(adminVerifyLoginOtp.fulfilled, handleAuthSuccess)
       .addCase(adminPasswordLogin.fulfilled, handleAuthSuccess)
       .addCase(createAccount.fulfilled, handleAuthSuccess)
-      .addCase(superAdminSignup.fulfilled, (state) => { /* no auto-login on SA signup */ })
 
+      .addCase(superAdminSignup.fulfilled, (state) => {
+        // No auto-login on Super Admin signup
+      })
+
+      // ─────────────────────────────────────────────────────────────
+      // LOGOUT
+      // ─────────────────────────────────────────────────────────────
       .addCase(logout.fulfilled, (state) => {
         clearAccessToken();
-        destroySocket(); // Phase 6: disconnect socket on logout
+        destroySocket();
+
         localStorage.removeItem("data");
         localStorage.removeItem("isLoggedIn");
         localStorage.removeItem("role");
         localStorage.removeItem("permissions");
+
         state.isLoggedIn = false;
         state.data = {};
         state.role = "";
@@ -325,14 +342,23 @@ const authSlice = createSlice({
         state.authCheckComplete = true;
       })
 
+      // ─────────────────────────────────────────────────────────────
+      // GET USER
+      // ─────────────────────────────────────────────────────────────
       .addCase(getUserData.fulfilled, (state, action) => {
         // /user/me → { success, data: { user } }
         const user = action?.payload?.data?.user;
+
         if (!user) return;
+
         localStorage.setItem("data", JSON.stringify(user));
         localStorage.setItem("isLoggedIn", "true");
         localStorage.setItem("role", user?.role || "");
-        localStorage.setItem("permissions", JSON.stringify(user?.permissions || []));
+        localStorage.setItem(
+          "permissions",
+          JSON.stringify(user?.permissions || [])
+        );
+
         state.isLoggedIn = true;
         state.data = user;
         state.role = user?.role || "";
@@ -340,36 +366,95 @@ const authSlice = createSlice({
         state.authCheckComplete = true;
       })
 
+      // ─────────────────────────────────────────────────────────────
+      // UPDATE PROFILE
+      // ─────────────────────────────────────────────────────────────
       .addCase(updateProfile.fulfilled, (state, action) => {
         const user = action?.payload?.data?.user;
+
         if (!user) return;
-        state.data = { ...state.data, ...user };
+
+        state.data = {
+          ...state.data,
+          ...user,
+        };
+
         localStorage.setItem("data", JSON.stringify(state.data));
       })
 
+      // ─────────────────────────────────────────────────────────────
+      // COURSE PROGRESS
+      // ─────────────────────────────────────────────────────────────
       .addCase(updateCourseProgress.fulfilled, (state, action) => {
         const progress = action?.payload?.data?.progress;
+
         if (!progress) return;
+
         state.data.progress = progress;
+
         localStorage.setItem("data", JSON.stringify(state.data));
       })
 
+      // ─────────────────────────────────────────────────────────────
+      // QUIZ
+      // ─────────────────────────────────────────────────────────────
       .addCase(submitQuiz.fulfilled, (state, action) => {
         const payload = action?.payload?.data;
+
         if (!payload?.progress) return;
+
         state.data.progress = payload.progress;
         state.data.weakTopics = payload.weakTopics;
+
         localStorage.setItem("data", JSON.stringify(state.data));
       })
 
+      // ─────────────────────────────────────────────────────────────
+      // ASSIGNMENT
+      // ─────────────────────────────────────────────────────────────
       .addCase(submitAssignment.fulfilled, (state, action) => {
         const progress = action?.payload?.data?.progress;
+
         if (!progress) return;
+
         state.data.progress = progress;
+
         localStorage.setItem("data", JSON.stringify(state.data));
-      });
+      })
+
+      // ─────────────────────────────────────────────────────────────
+      // MATCHERS MUST COME AFTER ALL addCase() CALLS
+      // ─────────────────────────────────────────────────────────────
+      .addMatcher(
+        (action) => action.type === "/payments/verify/fulfilled",
+        (state, action) => {
+          const user = action?.payload?.user;
+
+          if (user) {
+            state.data = {
+              ...state.data,
+              ...user,
+            };
+          } else {
+            if (!state.data) {
+              state.data = {};
+            }
+
+            if (!state.data.subscription) {
+              state.data.subscription = {};
+            }
+
+            state.data.subscription.status = "active";
+          }
+
+          localStorage.setItem(
+            "data",
+            JSON.stringify(state.data)
+          );
+        }
+      );
   },
 });
 
-export const { clearAuth, restoreSession } = authSlice.actions;
+export const { clearAuth, restoreSession, setSubscriptionStatus } = authSlice.actions;
 export default authSlice.reducer;

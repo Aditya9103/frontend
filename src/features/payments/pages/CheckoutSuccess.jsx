@@ -23,11 +23,12 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import axiosInstance from "../../../core/config/axiosInstance";
 import { getSocket } from "../../../core/config/socket";
 import HomeLayout from "../../../shared/layouts/HomeLayout";
+import { getUserData, setSubscriptionStatus } from "../../auth/redux/AuthSlice";
 import {
   confirmEnrollment,
   PAYMENT_STATUS,
@@ -40,6 +41,7 @@ const MAX_POLL_ATTEMPTS = 8; // 32 seconds total
 export default function CheckoutSuccess() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const { status } = useSelector((s) => s.razorpay);
   const [confirmed, setConfirmed] = useState(status === PAYMENT_STATUS.ENROLLED);
   const [elapsed, setElapsed] = useState(0);
@@ -48,13 +50,27 @@ export default function CheckoutSuccess() {
 
   const isConfirming = !confirmed;
 
+  // On mount and when confirmed: guarantee fresh user data in Redux & localStorage
+  useEffect(() => {
+    dispatch(getUserData());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (confirmed) {
+      dispatch(setSubscriptionStatus('active'));
+      dispatch(getUserData());
+    }
+  }, [confirmed, dispatch]);
+
   // ── Socket listener ────────────────────────────────────────────────────────
   useEffect(() => {
     const socket = getSocket();
     if (socket) {
-      const handler = (notification) => {
+      const handler = async (notification) => {
         if (notification.type === 'ENROLLMENT_CREATED') {
           dispatch(confirmEnrollment());
+          dispatch(setSubscriptionStatus('active'));
+          await dispatch(getUserData());
           setConfirmed(true);
         }
       };
@@ -81,6 +97,8 @@ export default function CheckoutSuccess() {
         const sub = res.data?.data?.user?.subscription;
         if (sub?.status === 'active') {
           dispatch(confirmEnrollment());
+          dispatch(setSubscriptionStatus('active'));
+          await dispatch(getUserData());
           setConfirmed(true);
         }
       } catch { /* ignore poll errors */ }
@@ -89,6 +107,8 @@ export default function CheckoutSuccess() {
         clearInterval(pollTimer.current);
         // After max attempts, show success anyway — webhook might be delayed
         dispatch(confirmEnrollment());
+        dispatch(setSubscriptionStatus('active'));
+        dispatch(getUserData());
         setConfirmed(true);
       }
     }, POLL_INTERVAL_MS);
@@ -215,12 +235,25 @@ export default function CheckoutSuccess() {
             ))}
           </div>
 
-          <Link
-            to="/courses"
-            className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold rounded-2xl hover:from-emerald-400 hover:to-teal-400 transition-all shadow-lg shadow-emerald-500/20"
-          >
-            <Award size={18} /> Start Learning Now
-          </Link>
+          {location.state?.course ? (
+            <button
+              onClick={async () => {
+                await dispatch(getUserData());
+                navigate("/course/displaylectures", { state: location.state.course });
+              }}
+              className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold rounded-2xl hover:from-emerald-400 hover:to-teal-400 transition-all shadow-lg shadow-emerald-500/20 cursor-pointer"
+            >
+              <Award size={18} /> Start Learning Now
+            </button>
+          ) : (
+            <Link
+              to="/courses"
+              onClick={() => dispatch(getUserData())}
+              className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold rounded-2xl hover:from-emerald-400 hover:to-teal-400 transition-all shadow-lg shadow-emerald-500/20"
+            >
+              <Award size={18} /> Start Learning Now
+            </Link>
+          )}
         </motion.div>
       </div>
     </HomeLayout>
