@@ -10,7 +10,7 @@ const initialState = {
 export const getAllCourses = createAsyncThunk("/course/get", async () => {
   try {
     const response = await courseService.getAllCourses();
-    return response.data.data.courses;
+    return response.data?.data?.courses || response.data?.courses || [];
   } catch (error) {
     toast.error(error?.response?.data?.error?.message || 'Failed to load courses');
   }
@@ -118,7 +118,7 @@ export const getCourseSubmissions = createAsyncThunk(
   async (id) => {
     try {
       const response = await courseService.getCourseSubmissions(id);
-      return response.data.data.submissions;
+      return response.data?.data?.submissions || response.data?.submissions || [];
     } catch (error) {
       toast.error(error?.response?.data?.error?.message || 'Failed to fetch submissions');
       throw error;

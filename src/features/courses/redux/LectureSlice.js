@@ -55,8 +55,7 @@ const lectureSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(getCourseLectures.fulfilled, (state, action) => {
-        // New envelope: res.data.data → { lectures, course, ... }
-        state.lectures = action?.payload?.lectures;
+        state.lectures = action?.payload?.lectures || (Array.isArray(action?.payload) ? action.payload : []);
       })
       .addCase(addCourseLecture.fulfilled, (state, action) => {
         state.lectures = action?.payload?.course?.lectures;
