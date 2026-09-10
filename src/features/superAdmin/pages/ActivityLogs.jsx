@@ -95,7 +95,7 @@ const ActivityLogs = () => {
     try {
       const response = await superAdminService.getActivityLogs();
       if (response.data?.success) {
-        setAllLogs(response.data.logs || []);
+        setAllLogs(response.data.data?.logs || response.data.logs || []);
         setLastRefresh(new Date());
       }
     } catch {

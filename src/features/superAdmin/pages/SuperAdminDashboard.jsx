@@ -16,7 +16,7 @@ const SuperAdminDashboard = () => {
     try {
       const response = await superAdminService.getSuperAdminStats();
       if (response.data.success) {
-        setStats(response.data.stats);
+        setStats(response.data.data?.stats || response.data.stats || {});
       }
     } catch (error) {
       toast.error('Failed to load dashboard stats');

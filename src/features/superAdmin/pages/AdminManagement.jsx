@@ -23,7 +23,8 @@ const AdminManagement = () => {
     try {
       const response = await superAdminService.getUsers();
       if (response.data.success) {
-        setAdmins(response.data.users.filter(u => u.role === 'ADMIN'));
+        const userList = response.data.data?.users || response.data.users || [];
+        setAdmins(userList.filter(u => u.role === 'ADMIN'));
       }
     } catch (error) {
       toast.error('Failed to load admins');

@@ -14,7 +14,8 @@ const UserManagement = () => {
     try {
       const response = await superAdminService.getUsers();
       if (response.data.success) {
-        setUsers(response.data.users.filter(u => u.role === 'USER'));
+        const userList = response.data.data?.users || response.data.users || [];
+        setUsers(userList.filter(u => u.role === 'USER'));
       }
     } catch (error) {
       toast.error('Failed to load users');

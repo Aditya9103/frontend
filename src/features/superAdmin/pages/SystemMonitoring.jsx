@@ -11,7 +11,7 @@ const SystemMonitoring = () => {
     try {
       const response = await superAdminService.getSystemHealth();
       if (response.data.success) {
-        setHealth(response.data.health);
+        setHealth(response.data.data?.health || response.data.health);
       }
     } catch (error) {
       toast.error('Failed to load system health');
