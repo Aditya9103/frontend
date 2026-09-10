@@ -29,8 +29,8 @@ import axiosInstance from "../../../core/config/axiosInstance";
 import { getSocket } from "../../../core/config/socket";
 import HomeLayout from "../../../shared/layouts/HomeLayout";
 import {
-  PAYMENT_STATUS,
   confirmEnrollment,
+  PAYMENT_STATUS,
   resetPayment,
 } from "../redux/RazorpaySlice";
 

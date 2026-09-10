@@ -11,6 +11,7 @@
  *   - err.code is available on rejected queries for branching in components
  */
 import { createApi } from '@reduxjs/toolkit/query/react';
+
 import axiosInstance from '../config/axiosInstance';
 
 /**

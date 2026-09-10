@@ -15,8 +15,8 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
-import HomeLayout from "../../../shared/layouts/HomeLayout";
 import CertificateCard from "../../../shared/components/CertificateCard";
+import HomeLayout from "../../../shared/layouts/HomeLayout";
 import { getLearnerDashboardData } from "../../superAdmin/redux/DashboardSlice";
 
 const ProgressRing = ({ percentage, color = "yellow" }) => {

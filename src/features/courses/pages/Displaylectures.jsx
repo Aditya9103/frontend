@@ -1,4 +1,5 @@
 import "jspdf-autotable";
+
 // html2canvas is only used for notes-export — certificate is now server-side (Phase 5)
 import { jsPDF } from "jspdf";
 import { useEffect, useRef, useState } from "react";

@@ -1,3 +1,6 @@
+// Phase 9: client-side safety-net sanitizer — backend is authoritative, DOMPurify
+// prevents XSS if stale/CDN-cached content bypasses backend sanitization
+import DOMPurify from 'dompurify';
 import { motion } from "framer-motion";
 import { ArrowLeft, Calendar, Clock, MessageSquare,Share2, User } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -7,9 +10,6 @@ import { useNavigate,useParams } from "react-router-dom";
 
 import blogService from "../../../core/services/blog.service";
 import HomeLayout from "../../../shared/layouts/HomeLayout";
-// Phase 9: client-side safety-net sanitizer — backend is authoritative, DOMPurify
-// prevents XSS if stale/CDN-cached content bypasses backend sanitization
-import DOMPurify from 'dompurify';
 
 function BlogDetails() {
     const { id: slugOrId } = useParams(); // Phase 9: accepts slug OR _id

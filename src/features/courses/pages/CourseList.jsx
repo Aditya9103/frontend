@@ -15,8 +15,8 @@ import { X } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { useGetCoursesQuery } from "../../../core/query/courseApi";   // Phase 8: RTK Query
-import HomeLayout from "../../../shared/layouts/HomeLayout";
 import { CourseCardSkeleton } from "../../../shared/components/Skeleton";
+import HomeLayout from "../../../shared/layouts/HomeLayout";
 import CourseGrid from "../components/CourseGrid";
 import CourseHero from "../components/CourseHero";
 import CourseSidebarFilter from "../components/CourseSidebarFilter";
