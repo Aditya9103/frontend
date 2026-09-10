@@ -7,6 +7,9 @@ import { useNavigate,useParams } from "react-router-dom";
 
 import blogService from "../../../core/services/blog.service";
 import HomeLayout from "../../../shared/layouts/HomeLayout";
+// Phase 9: client-side safety-net sanitizer — backend is authoritative, DOMPurify
+// prevents XSS if stale/CDN-cached content bypasses backend sanitization
+import DOMPurify from 'dompurify';
 
 function BlogDetails() {
     const { id: slugOrId } = useParams(); // Phase 9: accepts slug OR _id
@@ -136,9 +139,19 @@ function BlogDetails() {
                             {blog.excerpt}
                         </p>
                         
-                        <div 
+                        <div
                             className="text-lg text-gray-300 leading-loose space-y-8 font-medium selection:bg-yellow-500 selection:text-gray-900"
-                            dangerouslySetInnerHTML={{ __html: blog.content.replace(/\n/g, '<br/>') }}
+                            dangerouslySetInnerHTML={{
+                                // Phase 9: DOMPurify sanitizes backend-rendered HTML as a safety net.
+                                // ALLOW_DATA_ATTR: false prevents data-uri XSS vectors.
+                                __html: DOMPurify.sanitize(blog.content, {
+                                    ALLOW_DATA_ATTR: false,
+                                    ADD_TAGS: ['iframe'],        // allow embedded videos from trusted sources
+                                    ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling'],
+                                    FORBID_TAGS: ['script', 'style'],
+                                    FORBID_ATTR: ['onerror', 'onload', 'onclick'],
+                                })
+                            }}
                         />
                     </div>
 

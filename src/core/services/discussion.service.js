@@ -22,6 +22,11 @@ class DiscussionService {
   async markAnswered(discussionId) {
     return await axiosInstance.patch(`/discussions/${discussionId}/resolve`);
   }
+
+  // Phase 9 — flag / report a question for moderation
+  async flagQuestion(discussionId) {
+    return await axiosInstance.patch(`/discussions/${discussionId}/flag`);
+  }
 }
 
 export default new DiscussionService();

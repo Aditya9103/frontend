@@ -1,15 +1,20 @@
 /**
- * QaTab.jsx — Phase 6 upgraded with:
- *   - Socket.IO live subscription: receives 'discussion:new' events for this lecture
- *   - Upvote questions (optimistic update)
- *   - Mark-answered by instructor/admin
- *   - Instructor badge on replies
- *   - "Answered" badge on resolved discussions
+ * QaTab.jsx — Phase 9 final
+ *
+ * Additions over Phase 6 version:
+ *   - flag/report action on questions (Flag icon, optimistic flagged state)
+ *   - Hidden/moderated content: questions with `hidden: true` render a
+ *     "[Removed by moderator]" placeholder for regular users; admins/instructors
+ *     see the real content with a red "Hidden" badge (so they can review/restore)
+ *   - discussion.service.flagQuestion() wired in
  */
 import { AnimatePresence, motion } from 'framer-motion';
 import {
+  AlertTriangle,
   CheckCircle2,
   Clock,
+  EyeOff,
+  Flag,
   MessageSquare,
   Send,
   ShieldCheck,
@@ -36,16 +41,18 @@ const QaTab = ({
   courseId,
   lectureId,
 }) => {
-  // Local copy so we can push live socket updates without re-fetching
   const [discussions, setDiscussions] = useState(initialDiscussions || []);
   const [upvoting, setUpvoting] = useState({});
+  const [flagging, setFlagging] = useState({});
+
+  const isStaff = ['ADMIN', 'INSTRUCTOR', 'SUPER_ADMIN'].includes(userData?.role);
 
   // Keep in sync with parent re-fetches
   useEffect(() => {
     setDiscussions(initialDiscussions || []);
   }, [initialDiscussions]);
 
-  // ── Socket: live discussion updates ────────────────────────────────────────
+  // ── Socket: live discussion updates ─────────────────────────────────────────
   useEffect(() => {
     const socket = getSocket();
     if (!socket || !lectureId) return;
@@ -62,8 +69,6 @@ const QaTab = ({
 
     socket.on('discussion:new', handleNewDiscussion);
     socket.on('discussion:update', handleNewDiscussion);
-
-    // Join the lecture room for scoped events
     socket.emit('join:lecture', { courseId, lectureId });
     return () => {
       socket.off('discussion:new', handleNewDiscussion);
@@ -72,28 +77,18 @@ const QaTab = ({
     };
   }, [lectureId, courseId]);
 
-  // ── Upvote handler ─────────────────────────────────────────────────────────
+  // ── Upvote ──────────────────────────────────────────────────────────────────
   const handleUpvote = async (discId) => {
     if (upvoting[discId]) return;
     setUpvoting((u) => ({ ...u, [discId]: true }));
-    // Optimistic
     setDiscussions((prev) =>
-      prev.map((d) =>
-        d._id === discId
-          ? { ...d, upvotes: (d.upvotes || 0) + 1 }
-          : d
-      )
+      prev.map((d) => d._id === discId ? { ...d, upvotes: (d.upvotes || 0) + 1 } : d)
     );
     try {
       await discussionService.upvoteQuestion(discId);
     } catch {
-      // Revert on failure
       setDiscussions((prev) =>
-        prev.map((d) =>
-          d._id === discId
-            ? { ...d, upvotes: Math.max(0, (d.upvotes || 1) - 1) }
-            : d
-        )
+        prev.map((d) => d._id === discId ? { ...d, upvotes: Math.max(0, (d.upvotes || 1) - 1) } : d)
       );
       toast.error('Failed to upvote');
     } finally {
@@ -101,9 +96,7 @@ const QaTab = ({
     }
   };
 
-  // ── Mark answered (instructor / admin only) ────────────────────────────────
-  const canMarkAnswered = ['ADMIN', 'INSTRUCTOR', 'SUPER_ADMIN'].includes(userData?.role);
-
+  // ── Mark answered (staff only) ───────────────────────────────────────────────
   const handleMarkAnswered = async (discId) => {
     try {
       await discussionService.markAnswered(discId);
@@ -114,6 +107,192 @@ const QaTab = ({
     } catch {
       toast.error('Failed to update');
     }
+  };
+
+  // ── Phase 9: Flag / report a question ───────────────────────────────────────
+  const handleFlag = async (discId) => {
+    if (flagging[discId]) return;
+    setFlagging((f) => ({ ...f, [discId]: true }));
+    try {
+      await discussionService.flagQuestion(discId);
+      // Optimistic: mark as flagged to prevent double-reporting
+      setDiscussions((prev) =>
+        prev.map((d) => d._id === discId ? { ...d, flagged: true } : d)
+      );
+      toast.success('Post reported. Our moderators will review it.');
+    } catch {
+      toast.error('Could not submit report. Please try again.');
+    } finally {
+      setFlagging((f) => ({ ...f, [discId]: false }));
+    }
+  };
+
+  // ── Render a single discussion card ─────────────────────────────────────────
+  const renderDiscussion = (disc) => {
+    // Phase 9: hidden moderation logic
+    //   - Regular users: see a tombstone placeholder
+    //   - Staff:         see content + red "Hidden" badge (for review/restore)
+    const isHidden = disc.hidden;
+    if (isHidden && !isStaff) {
+      return (
+        <motion.div
+          key={disc._id}
+          layout
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          className="bg-white/5 border border-white/5 rounded-2xl p-5 flex items-center gap-3 text-gray-600"
+        >
+          <EyeOff size={16} />
+          <span className="text-sm italic">[This post was removed by a moderator.]</span>
+        </motion.div>
+      );
+    }
+
+    return (
+      <motion.div
+        key={disc._id}
+        layout
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0 }}
+        className={`bg-white/5 border rounded-2xl p-5 space-y-4 ${
+          isHidden
+            ? 'border-rose-500/30 bg-rose-500/5'       // staff: hidden indicator
+            : disc.resolved
+            ? 'border-emerald-500/20'
+            : 'border-white/10'
+        }`}
+      >
+        {/* Question row */}
+        <div className="flex items-start gap-4">
+          <div className="w-10 h-10 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center font-black flex-shrink-0">
+            {disc.user?.fullName?.charAt(0) || 'U'}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <span className="font-bold text-gray-200 text-sm truncate">{disc.user?.fullName || 'Anonymous'}</span>
+              <span className="text-[10px] text-gray-500">{new Date(disc.createdAt).toLocaleDateString()}</span>
+              {disc.timestamp !== null && disc.timestamp !== undefined && (
+                <button
+                  onClick={() => seekToTime(disc.timestamp)}
+                  className="px-2 py-0.5 bg-yellow-500/10 text-yellow-500 rounded text-[10px] font-black flex items-center gap-1 hover:bg-yellow-500 hover:text-black transition-all"
+                >
+                  <Clock size={10} /> {formatTime(disc.timestamp)}
+                </button>
+              )}
+              {disc.resolved && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded-full text-[10px] font-black border border-emerald-500/20">
+                  <CheckCircle2 size={10} /> Answered
+                </span>
+              )}
+              {/* Phase 9: Hidden badge — staff only */}
+              {isHidden && isStaff && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-500/10 text-rose-400 rounded-full text-[10px] font-black border border-rose-500/20">
+                  <EyeOff size={9} /> Hidden
+                </span>
+              )}
+              {/* Phase 9: Flagged indicator */}
+              {disc.flagged && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-500/10 text-orange-400 rounded-full text-[10px] font-black border border-orange-500/20">
+                  <Flag size={9} /> Flagged
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-gray-300 leading-relaxed break-words whitespace-pre-wrap">{disc.question}</p>
+          </div>
+
+          {/* Action buttons column */}
+          <div className="flex flex-col items-center gap-2">
+            {/* Upvote */}
+            <button
+              onClick={() => handleUpvote(disc._id)}
+              disabled={upvoting[disc._id]}
+              className="flex flex-col items-center gap-0.5 text-gray-500 hover:text-yellow-400 transition-colors disabled:opacity-50"
+              title="Upvote"
+            >
+              <ThumbsUp size={14} />
+              <span className="text-[10px] font-bold">{disc.upvotes || 0}</span>
+            </button>
+
+            {/* Mark answered — staff only */}
+            {isStaff && !disc.resolved && (
+              <button
+                onClick={() => handleMarkAnswered(disc._id)}
+                className="text-gray-500 hover:text-emerald-400 transition-colors"
+                title="Mark as Answered"
+              >
+                <CheckCircle2 size={14} />
+              </button>
+            )}
+
+            {/* Phase 9: Flag / report — non-staff, not already flagged */}
+            {!isStaff && !disc.flagged && (
+              <button
+                onClick={() => handleFlag(disc._id)}
+                disabled={flagging[disc._id]}
+                className="text-gray-600 hover:text-orange-400 transition-colors disabled:opacity-40"
+                title="Report this post"
+              >
+                <Flag size={13} />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Replies */}
+        {disc.replies?.length > 0 && (
+          <div className="ml-14 space-y-3">
+            {disc.replies.map((reply, idx) => {
+              const isInstructor = ['ADMIN', 'INSTRUCTOR', 'SUPER_ADMIN'].includes(reply.user?.role);
+              return (
+                <div
+                  key={idx}
+                  className={`flex items-start gap-3 p-3.5 rounded-xl border ${
+                    isInstructor ? 'bg-yellow-500/5 border-yellow-500/20' : 'bg-black/30 border-white/5'
+                  }`}
+                >
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs flex-shrink-0 ${isInstructor ? 'bg-yellow-500/20 text-yellow-400' : 'bg-purple-500/20 text-purple-400'}`}>
+                    {reply.user?.fullName?.charAt(0) || 'U'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-bold text-gray-300 truncate">{reply.user?.fullName || 'Anonymous'}</span>
+                      {isInstructor && (
+                        <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-yellow-400 bg-yellow-500/10 px-1.5 py-0.5 rounded-full border border-yellow-500/20">
+                          <ShieldCheck size={9} /> Instructor
+                        </span>
+                      )}
+                      <span className="text-[10px] text-gray-500">{new Date(reply.createdAt).toLocaleDateString()}</span>
+                    </div>
+                    <p className="text-sm text-gray-400 break-words whitespace-pre-wrap">{reply.reply}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Reply input */}
+        <div className="ml-14 flex gap-2">
+          <input
+            type="text"
+            value={replyInputs[disc._id] || ''}
+            onChange={(e) => setReplyInputs({ ...replyInputs, [disc._id]: e.target.value })}
+            onKeyPress={(e) => e.key === 'Enter' && handlePostReply(disc._id)}
+            placeholder="Write a reply…"
+            className="flex-1 bg-black/50 border border-white/10 rounded-lg px-4 py-2 text-xs outline-none focus:border-yellow-500/50 transition-all text-white placeholder:text-gray-600"
+          />
+          <button
+            onClick={() => handlePostReply(disc._id)}
+            disabled={!replyInputs[disc._id]?.trim()}
+            className="px-4 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-all disabled:opacity-50 flex items-center justify-center"
+          >
+            <Send size={14} />
+          </button>
+        </div>
+      </motion.div>
+    );
   };
 
   return (
@@ -159,113 +338,7 @@ const QaTab = ({
       {/* Discussions */}
       <div className="space-y-5">
         <AnimatePresence initial={false}>
-          {discussions.map((disc) => (
-            <motion.div
-              key={disc._id}
-              layout
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className={`bg-white/5 border rounded-2xl p-5 space-y-4 ${disc.resolved ? 'border-emerald-500/20' : 'border-white/10'
-                }`}
-            >
-              {/* Question row */}
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center font-black flex-shrink-0">
-                  {disc.user?.fullName?.charAt(0) || 'U'}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <span className="font-bold text-gray-200 text-sm truncate">{disc.user?.fullName || 'Anonymous'}</span>
-                    <span className="text-[10px] text-gray-500">{new Date(disc.createdAt).toLocaleDateString()}</span>
-                    {disc.timestamp !== null && disc.timestamp !== undefined && (
-                      <button
-                        onClick={() => seekToTime(disc.timestamp)}
-                        className="px-2 py-0.5 bg-yellow-500/10 text-yellow-500 rounded text-[10px] font-black flex items-center gap-1 hover:bg-yellow-500 hover:text-black transition-all"
-                      >
-                        <Clock size={10} /> {formatTime(disc.timestamp)}
-                      </button>
-                    )}
-                    {disc.resolved && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded-full text-[10px] font-black border border-emerald-500/20">
-                        <CheckCircle2 size={10} /> Answered
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-300 leading-relaxed break-words whitespace-pre-wrap">{disc.question}</p>
-                </div>
-
-                {/* Upvote + mark answered */}
-                <div className="flex flex-col items-center gap-2">
-                  <button
-                    onClick={() => handleUpvote(disc._id)}
-                    disabled={upvoting[disc._id]}
-                    className="flex flex-col items-center gap-0.5 text-gray-500 hover:text-yellow-400 transition-colors disabled:opacity-50"
-                    title="Upvote"
-                  >
-                    <ThumbsUp size={14} />
-                    <span className="text-[10px] font-bold">{disc.upvotes || 0}</span>
-                  </button>
-                  {canMarkAnswered && !disc.resolved && (
-                    <button
-                      onClick={() => handleMarkAnswered(disc._id)}
-                      className="text-gray-500 hover:text-emerald-400 transition-colors"
-                      title="Mark as Answered"
-                    >
-                      <CheckCircle2 size={14} />
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Replies */}
-              {disc.replies?.length > 0 && (
-                <div className="ml-14 space-y-3">
-                  {disc.replies.map((reply, idx) => {
-                    const isInstructor = ['ADMIN', 'INSTRUCTOR', 'SUPER_ADMIN'].includes(reply.user?.role);
-                    return (
-                      <div key={idx} className={`flex items-start gap-3 p-3.5 rounded-xl border ${isInstructor ? 'bg-yellow-500/5 border-yellow-500/20' : 'bg-black/30 border-white/5'}`}>
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs flex-shrink-0 ${isInstructor ? 'bg-yellow-500/20 text-yellow-400' : 'bg-purple-500/20 text-purple-400'}`}>
-                          {reply.user?.fullName?.charAt(0) || 'U'}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs font-bold text-gray-300 truncate">{reply.user?.fullName || 'Anonymous'}</span>
-                            {isInstructor && (
-                              <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-yellow-400 bg-yellow-500/10 px-1.5 py-0.5 rounded-full border border-yellow-500/20">
-                                <ShieldCheck size={9} /> Instructor
-                              </span>
-                            )}
-                            <span className="text-[10px] text-gray-500">{new Date(reply.createdAt).toLocaleDateString()}</span>
-                          </div>
-                          <p className="text-sm text-gray-400 break-words whitespace-pre-wrap">{reply.reply}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Reply input */}
-              <div className="ml-14 flex gap-2">
-                <input
-                  type="text"
-                  value={replyInputs[disc._id] || ''}
-                  onChange={(e) => setReplyInputs({ ...replyInputs, [disc._id]: e.target.value })}
-                  onKeyPress={(e) => e.key === 'Enter' && handlePostReply(disc._id)}
-                  placeholder="Write a reply…"
-                  className="flex-1 bg-black/50 border border-white/10 rounded-lg px-4 py-2 text-xs outline-none focus:border-yellow-500/50 transition-all text-white placeholder:text-gray-600"
-                />
-                <button
-                  onClick={() => handlePostReply(disc._id)}
-                  disabled={!replyInputs[disc._id]?.trim()}
-                  className="px-4 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-all disabled:opacity-50 flex items-center justify-center"
-                >
-                  <Send size={14} />
-                </button>
-              </div>
-            </motion.div>
-          ))}
+          {discussions.map(renderDiscussion)}
         </AnimatePresence>
 
         {discussions.length === 0 && (
