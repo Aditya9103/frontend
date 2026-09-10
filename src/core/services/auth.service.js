@@ -88,6 +88,11 @@ class AuthService {
   async submitAssignment(data) {
     return await axiosInstance.post('/user/assignment/submit', data);
   }
+
+  // Phase 5: fetch server-generated certificate PDF URL
+  async getCertificate(courseId) {
+    return await axiosInstance.get(`/certificates/${courseId}`);
+  }
 }
 
 export default new AuthService();

@@ -1,6 +1,5 @@
 import "jspdf-autotable";
-
-import html2canvas from "html2canvas";
+// html2canvas is only used for notes-export — certificate is now server-side (Phase 5)
 import { jsPDF } from "jspdf";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
@@ -26,7 +25,7 @@ function Displaylectures() {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const { state } = useLocation();
-    const certificateRef = useRef(null);
+    const certificateRef = useRef(null); // kept for legacy hidden element — removed below
 
     const { lectures, isLoading } = useSelector((state) => state.lecture);
     const { role, data: userData } = useSelector((state) => state.auth);
@@ -118,28 +117,33 @@ function Displaylectures() {
         }
     };
 
+    /**
+     * Phase 5: Certificate download — server-side PDF
+     * GET /certificates/:userId/:courseId returns { data: { url, filename } }
+     * We create a temporary <a> to trigger a native file download.
+     */
     const handleDownloadCertificate = async () => {
-        const loadingToast = toast.loading("Generating your verified certificate...");
+        const loadingToast = toast.loading('Fetching your certificate...');
         try {
-            const element = certificateRef.current;
-            if (!element) throw new Error("Certificate template not found.");
-            const canvas = await html2canvas(element, {
-                scale: 2,
-                useCORS: true,
-                logging: false,
-            });
-            const imgData = canvas.toDataURL('image/png');
-            const pdf = new jsPDF({
-                orientation: 'landscape',
-                unit: 'px',
-                format: [canvas.width, canvas.height]
-            });
-            pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-            pdf.save(`${userData?.fullName?.replace(/\s+/g, '_') || 'Student'}_Certificate.pdf`);
-            toast.success("Certificate downloaded! Congratulations!", { id: loadingToast });
+            const res = await authService.getCertificate(state._id);
+            const { url, filename } = res.data?.data || res.data || {};
+            if (!url) throw new Error('Certificate URL not returned by server');
+            // Trigger browser download without opening a new tab
+            const anchor = document.createElement('a');
+            anchor.href = url;
+            anchor.download = filename || `${userData?.fullName?.replace(/\s+/g, '_') || 'Student'}_Certificate.pdf`;
+            document.body.appendChild(anchor);
+            anchor.click();
+            document.body.removeChild(anchor);
+            toast.success('Certificate downloaded! Congratulations! 🎓', { id: loadingToast });
         } catch (error) {
-            console.error(error);
-            toast.error("Failed to generate certificate.", { id: loadingToast });
+            // Graceful fallback: if server endpoint 404s (not yet implemented), show friendly message
+            const status = error?.response?.status;
+            if (status === 404) {
+                toast.error('Certificate not yet generated. Complete the course first.', { id: loadingToast });
+            } else {
+                toast.error('Failed to download certificate. Please try again.', { id: loadingToast });
+            }
         }
     };
 
@@ -183,6 +187,14 @@ function Displaylectures() {
 
     const courseProgress = userData?.progress?.find(p => p.courseId === state?._id);
     const completedLectures = courseProgress?.completedLectures || [];
+
+    // Phase 5: optimistic completion — derived from current lecture's tracked watchedPercent
+    const currentLectureProgress = courseProgress?.lectures?.find(
+        l => l.lectureId === lectures[currentVideo]?._id
+    );
+    const isCurrentLectureCompleted =
+        currentLectureProgress?.completed ||
+        (currentLectureProgress?.watchedPercent || 0) >= 90;
 
     const handleAddBookmark = async () => {
         if (!videoRef.current) return;
@@ -399,6 +411,7 @@ function Displaylectures() {
                             playbackRate={playbackRate}
                             handleSpeedChange={handleSpeedChange}
                             handleAddBookmark={handleAddBookmark}
+                            isCompleted={isCurrentLectureCompleted}
                         />
 
                         <LectureTabsNav activeTab={activeTab} setActiveTab={setActiveTab} />

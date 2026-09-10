@@ -1,5 +1,5 @@
 import { AnimatePresence,motion } from 'framer-motion';
-import { Bookmark, HelpCircle, Subtitles,Video } from 'lucide-react';
+import { Bookmark, CheckCircle2, HelpCircle, Subtitles,Video } from 'lucide-react';
 import React from 'react';
 
 const LectureVideoPlayer = ({
@@ -19,7 +19,8 @@ const LectureVideoPlayer = ({
     formatTime,
     playbackRate,
     handleSpeedChange,
-    handleAddBookmark
+    handleAddBookmark,
+    isCompleted = false, // Phase 5: optimistic completed state
 }) => {
     return (
         <div className="flex flex-col gap-4">
@@ -89,6 +90,29 @@ const LectureVideoPlayer = ({
                                     <button onClick={() => { setActiveQuiz(null); if (videoRef.current) videoRef.current.play(); }} className="py-4 px-6 bg-white/5 border border-white/10 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-white/10 transition-all">Skip</button>
                                 </div>
                             </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Phase 5: Optimistic completion overlay — shows when watchedPercent >= threshold */}
+                <AnimatePresence>
+                    {isCompleted && !activeQuiz && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-emerald-900/60 backdrop-blur-sm flex flex-col items-center justify-center z-20 gap-4"
+                        >
+                            <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                                className="w-20 h-20 bg-emerald-500/20 border-2 border-emerald-500/50 rounded-full flex items-center justify-center"
+                            >
+                                <CheckCircle2 size={40} className="text-emerald-400" />
+                            </motion.div>
+                            <p className="text-xl font-black font-outfit text-white">Lecture Complete! 🎉</p>
+                            <p className="text-sm text-emerald-300 font-medium">Great work — keep going!</p>
                         </motion.div>
                     )}
                 </AnimatePresence>

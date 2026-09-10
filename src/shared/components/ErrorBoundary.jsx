@@ -1,6 +1,9 @@
 import { AlertTriangle, Home,RefreshCw } from 'lucide-react';
 import React from 'react';
 
+// Phase 4: import Sentry for error reporting — no-ops if DSN not configured
+import Sentry from '../../core/config/sentry.js';
+
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -13,6 +16,12 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     console.error("Uncaught error:", error, errorInfo);
+    // Phase 4: report to Sentry with React component stack for source-mapped traces
+    if (Sentry?.captureException) {
+      Sentry.captureException(error, {
+        contexts: { react: { componentStack: errorInfo.componentStack } },
+      });
+    }
   }
 
   render() {
