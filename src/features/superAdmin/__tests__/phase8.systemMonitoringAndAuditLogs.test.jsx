@@ -6,14 +6,14 @@
  *  - 8.2 ActivityLogs Component: Classification, Filtering & Search
  *  - 8.3 Resilient Response Envelope Handling (DEF-08-005)
  */
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { fireEvent,render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { afterEach,beforeEach, describe, expect, it, vi } from 'vitest';
 
-import SystemMonitoring from '../pages/SystemMonitoring';
-import ActivityLogs from '../pages/ActivityLogs';
 import superAdminService from '../../../core/services/superAdmin.service';
+import ActivityLogs from '../pages/ActivityLogs';
+import SystemMonitoring from '../pages/SystemMonitoring';
 
 vi.mock('../../../core/services/superAdmin.service', () => ({
   default: {

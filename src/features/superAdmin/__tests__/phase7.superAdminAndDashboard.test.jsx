@@ -6,13 +6,13 @@
  *  - 7.2 DashboardSlice State Machine & Learner Metrics
  *  - 7.3 SuperAdminService HTTP Integration & RBAC Contracts
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { configureStore } from '@reduxjs/toolkit';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import statReducer, { getStatsData } from '../redux/StatSlice';
-import dashboardReducer, { getLearnerDashboardData } from '../redux/DashboardSlice';
-import superAdminService from '../../../core/services/superAdmin.service';
 import axiosInstance from '../../../core/config/axiosInstance';
+import superAdminService from '../../../core/services/superAdmin.service';
+import dashboardReducer, { getLearnerDashboardData } from '../redux/DashboardSlice';
+import statReducer, { getStatsData } from '../redux/StatSlice';
 
 vi.mock('../../../core/config/axiosInstance', () => {
   const instance = vi.fn();

@@ -6,18 +6,18 @@
  *  - 4.2 RTK Query Course API & Cache Integration (courseApi + axiosInstance mock)
  *  - 4.3 CourseCard UI Rendering (Title, Category, Description, Instructor)
  */
-import React from 'react';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
 import { configureStore } from '@reduxjs/toolkit';
+import { render, screen } from '@testing-library/react';
+import React from 'react';
+import { MemoryRouter } from 'react-router-dom';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import courseReducer, { getAllCourses } from '../redux/CourseSlice';
-import lectureReducer, { getCourseLectures, addCourseLecture } from '../redux/LectureSlice';
+import axiosInstance from '../../../core/config/axiosInstance';
 import { apiSlice } from '../../../core/query/apiSlice';
 import courseApi from '../../../core/query/courseApi';
 import CourseCard from '../../../shared/components/CourseCard';
-import axiosInstance from '../../../core/config/axiosInstance';
+import courseReducer, { getAllCourses } from '../redux/CourseSlice';
+import lectureReducer, { addCourseLecture,getCourseLectures } from '../redux/LectureSlice';
 
 vi.mock('../../../core/config/axiosInstance', () => {
   const instance = vi.fn();

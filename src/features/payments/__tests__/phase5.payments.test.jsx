@@ -6,23 +6,23 @@
  *  - 5.2 PaymentService HTTP & Idempotency Header Integration
  *  - 5.3 Asynchronous Verification & Enrollment Confirmation
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { configureStore } from '@reduxjs/toolkit';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import axiosInstance from '../../../core/config/axiosInstance';
+import paymentService from '../../../core/services/payment.service';
 import razorpayReducer, {
-  PAYMENT_STATUS,
-  getRazorPayId,
-  purchaseCourseBundle,
-  verifyUserPayment,
-  getPaymentRecord,
   cancelCourseBundle,
+  confirmEnrollment,
+  getPaymentRecord,
+  getRazorPayId,
+  PAYMENT_STATUS,
+  purchaseCourseBundle,
+  resetPayment,
   setIdempotencyKey,
   setPaymentStatus,
-  resetPayment,
-  confirmEnrollment,
+  verifyUserPayment,
 } from '../redux/RazorpaySlice';
-import paymentService from '../../../core/services/payment.service';
-import axiosInstance from '../../../core/config/axiosInstance';
 
 vi.mock('../../../core/config/axiosInstance', () => {
   const instance = vi.fn();

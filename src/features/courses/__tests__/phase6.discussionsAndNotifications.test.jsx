@@ -6,19 +6,19 @@
  *  - 6.2 Discussion & Interaction Services (API contracts & deleteBookmark)
  *  - 6.3 Real-Time Discussion Socket Events & State Management
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { configureStore } from '@reduxjs/toolkit';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import notificationReducer, {
-  fetchNotifications,
-  markNotificationRead,
-  markAllNotificationsRead,
-  pushNotification,
-  clearNotifications,
-} from '../../notifications/redux/NotificationSlice';
+import axiosInstance from '../../../core/config/axiosInstance';
 import discussionService from '../../../core/services/discussion.service';
 import interactionService from '../../../core/services/interaction.service';
-import axiosInstance from '../../../core/config/axiosInstance';
+import notificationReducer, {
+  clearNotifications,
+  fetchNotifications,
+  markAllNotificationsRead,
+  markNotificationRead,
+  pushNotification,
+} from '../../notifications/redux/NotificationSlice';
 
 vi.mock('../../../core/config/axiosInstance', () => {
   const instance = vi.fn();
