@@ -9,12 +9,14 @@ const initialState = {
 
 export const getLearnerDashboardData = createAsyncThunk(
   "/dashboard/learner",
-  async () => {
+  async (_, { rejectWithValue }) => {
     try {
       const response = await superAdminService.getLearnerDashboardData();
-      return response.data.data;
+      return response.data?.data ?? response.data;
     } catch (error) {
-      toast.error(error?.response?.data?.error?.message || 'Failed to load dashboard data');
+      const message = error?.response?.data?.error?.message || 'Failed to load dashboard data';
+      toast.error(message);
+      return rejectWithValue(message);
     }
   }
 );

@@ -8,12 +8,14 @@ const initialState = {
   subscribedCount: 0,
 };
 
-export const getStatsData = createAsyncThunk("stat/get", async () => {
+export const getStatsData = createAsyncThunk("stat/get", async (_, { rejectWithValue }) => {
   try {
     const response = await superAdminService.getStatsData();
-    return response.data.data;
+    return response.data?.data ?? response.data;
   } catch (error) {
-    toast.error(error?.response?.data?.error?.message || 'Failed to load stats');
+    const message = error?.response?.data?.error?.message || 'Failed to load stats';
+    toast.error(message);
+    return rejectWithValue(message);
   }
 });
 
@@ -23,9 +25,10 @@ const statSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(getStatsData.fulfilled, (state, action) => {
-      // thunk now returns res.data.data directly
-      state.allUsersCount = action?.payload?.allUsersCount;
-      state.subscribedCount = action?.payload?.subscribedUsersCount;
+      if (action.payload) {
+        state.allUsersCount = action.payload.allUsersCount ?? 0;
+        state.subscribedCount = action.payload.subscribedUsersCount ?? 0;
+      }
     });
   },
 });
